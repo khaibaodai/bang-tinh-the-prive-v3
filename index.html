@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Công cụ tính dòng tiền The Privé - Phiên bản 3.0</title>
+    <title>Công cụ tính dòng tiền The Privé - Hoàn chỉnh Phase 1</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -148,15 +149,18 @@
         .tab-buttons {
             display: flex;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
         
         .tab-btn {
-            padding: 10px 20px;
+            padding: 10px 15px;
             background-color: #e2e8f0;
             border: none;
             border-radius: 4px 4px 0 0;
             margin-right: 4px;
+            margin-bottom: 4px;
             cursor: pointer;
+            font-size: 14px;
         }
         
         .tab-btn.active {
@@ -192,7 +196,7 @@
     <div class="container">
         <div class="header-logo">
             <div>
-                <h1 class="text-3xl font-bold mb-1">CÔNG CỤ TÍNH DÒNG TIỀN THE PRIVÉ</h1>
+                <h1 class="text-3xl font-bold mb-1">CÔNG CỤ TÍNH DÒNG TIỀN THE PRIVÉ - PHASE 1</h1>
                 <h2 class="text-xl">Đại lý chiến lược OneS</h2>
                 <h3 class="text-lg font-bold text-blue-600">HOTLINE: 090 398 3737</h3>
             </div>
@@ -202,7 +206,7 @@
         <div class="section">
             <h2 class="text-2xl font-bold mb-4">MẶT BẰNG TỔNG</h2>
             <div class="mb-4">
-                <img id="mat_bang_tong" src="https://lh3.googleusercontent.com/d/1dmKiMsmvS5YTtj5pZ7bSWfE8FGta_EHD" alt="Mặt bằng tổng The Privé" class="floor-plan-img">
+                <img id="mat_bang_tong" src="https://lh3.googleusercontent.com/d/1Zi3Fqv-aveEy42MT1tte5wtgzAW3Dhnw" alt="Mặt bằng tổng The Privé" class="floor-plan-img">
             </div>
         </div>
         
@@ -251,7 +255,7 @@
                         <input type="text" id="ma_can_ho" class="w-full p-2 border rounded" readonly>
                     </div>
                     <div class="mb-4">
-                        <label for="gia_m2" class="block mb-2 font-medium">Đơn giá (VNĐ/m²):</label>
+                        <label for="gia_m2" class="block mb-2 font-medium">Đơn giá gốc (VNĐ/m²):</label>
                         <input type="number" id="gia_m2" class="w-full p-2 border rounded" value="99000000">
                     </div>
                     <div class="mb-4">
@@ -361,26 +365,26 @@
                     </label>
                 </div>
             </div>
-
-            <!-- 4. Voucher Chiết Khấu -->
+            
+            <!-- 4. Voucher ưu đãi -->
             <div class="mb-6">
-                <h3 class="text-xl font-bold mb-2">4. Voucher Chiết Khấu</h3>
+                <h3 class="text-xl font-bold mb-2">4. Voucher ưu đãi</h3>
                 <div>
                     <label class="inline-flex items-center mb-2">
-                        <input type="radio" name="voucher_chiet_khau" id="voucher_chiet_khau_0" value="0" checked class="form-radio">
-                        <span class="ml-2">Không áp dụng voucher</span>
+                        <input type="radio" name="voucher_uu_dai" id="voucher_none" value="0" checked class="form-radio">
+                        <span class="ml-2">Không sử dụng voucher</span>
                     </label>
                 </div>
                 <div>
                     <label class="inline-flex items-center mb-2">
-                        <input type="radio" name="voucher_chiet_khau" id="voucher_chiet_khau_20" value="20" class="form-radio">
-                        <span class="ml-2">Voucher 20% - Khách hàng đình danh gốc (5% ký HĐMB, 10% bàn giao, 5% nhận GCN)</span>
+                        <input type="radio" name="voucher_uu_dai" id="voucher_20" value="20" class="form-radio">
+                        <span class="ml-2">Voucher 20% - Khách hàng đình danh gốc</span>
                     </label>
                 </div>
                 <div>
                     <label class="inline-flex items-center mb-2">
-                        <input type="radio" name="voucher_chiet_khau" id="voucher_chiet_khau_18" value="18" class="form-radio">
-                        <span class="ml-2">Voucher 18% - Khách hàng nhận chuyển giao (5% ký HĐMB, 8% bàn giao, 5% nhận GCN)</span>
+                        <input type="radio" name="voucher_uu_dai" id="voucher_18" value="18" class="form-radio">
+                        <span class="ml-2">Voucher 18% - Khách hàng nhận chuyển giao</span>
                     </label>
                 </div>
             </div>
@@ -417,9 +421,21 @@
                         <td>Giá bán cuối cùng (bao gồm VAT, sau chiết khấu chung):</td>
                         <td id="gia_ban_cuoi_cung_gom_vat_sau_ck_chung" class="price highlight">0 VNĐ</td>
                     </tr>
-                    <tr id="voucher_chiet_khau_row" class="hidden">
-                        <td>Voucher chiết khấu (<span id="voucher_percent_display">0</span>%):</td>
-                        <td id="voucher_amount" class="price highlight">0 VNĐ</td>
+                    <tr>
+                        <td>Đơn giá sau chiết khấu chung (VNĐ/m²):</td>
+                        <td id="don_gia_sau_ck_chung" class="price highlight">0 VNĐ</td>
+                    </tr>
+                    <tr>
+                        <td>Voucher ưu đãi (<span id="voucher_percent_display">0</span>%):</td>
+                        <td id="voucher_amount" class="price">0 VNĐ</td>
+                    </tr>
+                    <tr>
+                        <td>Giá bán cuối cùng (sau voucher ưu đãi):</td>
+                        <td id="gia_ban_cuoi_cung_sau_voucher" class="price highlight">0 VNĐ</td>
+                    </tr>
+                    <tr>
+                        <td>Đơn giá sau voucher ưu đãi (VNĐ/m²):</td>
+                        <td id="don_gia_sau_voucher" class="price highlight">0 VNĐ</td>
                     </tr>
                 </tbody>
             </table>
@@ -445,14 +461,15 @@
             <h2 class="text-2xl font-bold mb-4">PHƯƠNG THỨC THANH TOÁN</h2>
             
             <div class="tab-buttons">
-                <button class="tab-btn active" onclick="openTab('pttt_chuan')">PTTT Chuẩn (26 tháng)</button>
-                <button class="tab-btn" onclick="openTab('pttt_nhanh')">PTTT Nhanh - Ưu đãi "Cực khủng"</button>
-                <button class="tab-btn" onclick="openTab('pttt_vay')">PTTT Hỗ trợ vay ưu đãi (Nhận nhà chỉ với 8.6%)</button>
+                <button class="tab-btn active" onclick="openTab('pttt_1')">PTTT 1: Theo thời gian</button>
+                <button class="tab-btn" onclick="openTab('pttt_2')">PTTT 2: Theo tiến độ</button>
+                <button class="tab-btn" onclick="openTab('pttt_nhanh')">PTTT 3: Nhanh</button>
+                <button class="tab-btn" onclick="openTab('pttt_vay')">PTTT 4: Hỗ trợ vay</button>
             </div>
             
-            <!-- PTTT CHUẨN -->
-            <div id="pttt_chuan" class="tab active">
-                <h3 class="text-xl font-bold mb-4">PHƯƠNG THỨC THANH TOÁN CHUẨN (26 THÁNG)</h3>
+            <!-- PTTT 1: THEO THỜI GIAN -->
+            <div id="pttt_1" class="tab active">
+                <h3 class="text-xl font-bold mb-4">PTTT 1: THANH TOÁN THEO THỜI GIAN (26 ĐỢT)</h3>
                 <table class="w-full">
                     <thead>
                         <tr>
@@ -463,7 +480,26 @@
                             <th>Thời gian</th>
                         </tr>
                     </thead>
-                    <tbody id="pttt_chuan_table">
+                    <tbody id="pttt_1_table">
+                        <!-- JS sẽ điền bảng này -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- PTTT 2: THEO TIẾN ĐỘ -->
+            <div id="pttt_2" class="tab">
+                <h3 class="text-xl font-bold mb-4">PTTT 2: THANH TOÁN THEO TIẾN ĐỘ XÂY DỰNG (12 ĐỢT)</h3>
+                <table class="w-full">
+                    <thead>
+                        <tr>
+                            <th>Đợt thanh toán</th>
+                            <th>Tỷ lệ (%)</th>
+                            <th>Số tiền (VNĐ)</th>
+                            <th>Tiến độ / Thời gian</th>
+                            <th>Thời gian</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pttt_2_table">
                         <!-- JS sẽ điền bảng này -->
                     </tbody>
                 </table>
@@ -471,7 +507,7 @@
             
             <!-- PTTT NHANH -->
             <div id="pttt_nhanh" class="tab">
-                <h3 class="text-xl font-bold mb-4">PHƯƠNG THỨC THANH TOÁN NHANH – ƯU ĐÃI "CỰC KHỦNG"</h3>
+                <h3 class="text-xl font-bold mb-4">PTTT 3: THANH TOÁN NHANH – ƯU ĐÃI "CỰC KHỦNG"</h3>
                 <table class="w-full">
                     <thead>
                         <tr>
@@ -495,7 +531,7 @@
             
             <!-- PTTT VAY -->
             <div id="pttt_vay" class="tab">
-                <h3 class="text-xl font-bold mb-4">PHƯƠNG THỨC HỖ TRỢ VAY ƯU ĐÃI – NHẬN NHÀ CHỈ VỚI 8,6%</h3>
+                <h3 class="text-xl font-bold mb-4">PTTT 4: HỖ TRỢ VAY ƯU ĐÃI (CHO TỚI KHI BÀN GIAO CHỈ VỚI 8.6%)</h3>
                 
                 <div class="mb-6">
                     <h4 class="text-lg font-bold mb-2">Thông tin khoản vay</h4>
@@ -545,6 +581,15 @@
             </div>
         </div>
         
+        <!-- BIỂU ĐỒ SO SÁNH -->
+        <div class="section">
+            <h2 class="text-2xl font-bold mb-4">BIỂU ĐỒ SO SÁNH DÒNG TIỀN LŨY TIẾN</h2>
+            <div style="width: 100%; height: 400px;">
+                <canvas id="cashFlowChart"></canvas>
+            </div>
+            <p class="text-sm text-gray-600 mt-2">Biểu đồ hiển thị tổng số tiền lũy tiến khách hàng phải thanh toán theo thời gian cho từng phương thức</p>
+        </div>
+        
         <!-- SO SÁNH VÀ KHUYẾN NGHỊ PHƯƠNG THỨC THANH TOÁN -->
         <div class="section">
             <h2 class="text-2xl font-bold mb-4">SO SÁNH VÀ KHUYẾN NGHỊ PHƯƠNG THỨC THANH TOÁN</h2>
@@ -553,33 +598,38 @@
                 <thead>
                     <tr>
                         <th>Tiêu chí</th>
-                        <th>PTTT Chuẩn</th>
-                        <th>PTTT Nhanh</th>
-                        <th>PTTT Hỗ trợ vay</th>
+                        <th>PTTT 1: Theo thời gian</th>
+                        <th>PTTT 2: Theo tiến độ</th>
+                        <th>PTTT 3: Nhanh</th>
+                        <th>PTTT 4: Hỗ trợ vay</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td>Số tiền cọc ban đầu</td>
-                        <td id="coc_pttt_chuan">0 VNĐ</td>
-                        <td id="coc_pttt_nhanh">0 VNĐ</td>
-                        <td id="coc_pttt_vay">0 VNĐ</td>
+                        <td id="coc_pttt_1">100.000.000 VNĐ</td>
+                        <td id="coc_pttt_2">100.000.000 VNĐ</td>
+                        <td id="coc_pttt_nhanh">100.000.000 VNĐ</td>
+                        <td id="coc_pttt_vay">100.000.000 VNĐ</td>
                     </tr>
                     <tr>
                         <td>Tổng số tiền cần có để ký HĐMB</td>
-                        <td id="ky_hdmb_pttt_chuan">0 VNĐ</td>
+                        <td id="ky_hdmb_pttt_1">0 VNĐ</td>
+                        <td id="ky_hdmb_pttt_2">0 VNĐ</td>
                         <td id="ky_hdmb_pttt_nhanh">0 VNĐ</td>
                         <td id="ky_hdmb_pttt_vay">0 VNĐ</td>
                     </tr>
                     <tr>
                         <td>Chiết khấu</td>
-                        <td id="chiet_khau_pttt_chuan">Chiết khấu chung</td>
-                        <td id="chiet_khau_pttt_nhanh">Chiết khấu chung + 8% (cho 60% GTCH)</td>
-                        <td id="chiet_khau_pttt_vay">Chiết khấu chung</td>
+                        <td id="chiet_khau_pttt_1">Chiết khấu chung + Voucher</td>
+                        <td id="chiet_khau_pttt_2">Chiết khấu chung + Voucher</td>
+                        <td id="chiet_khau_pttt_nhanh">Chiết khấu chung + Voucher + 8%</td>
+                        <td id="chiet_khau_pttt_vay">Chiết khấu chung + Voucher</td>
                     </tr>
                     <tr>
                         <td>Tổng tiền phải thanh toán tới thời điểm nhận nhà (T+720)</td>
-                        <td id="tong_tien_nhan_nha_pttt_chuan">0 VNĐ</td>
+                        <td id="tong_tien_nhan_nha_pttt_1">0 VNĐ</td>
+                        <td id="tong_tien_nhan_nha_pttt_2">0 VNĐ</td>
                         <td id="tong_tien_nhan_nha_pttt_nhanh">0 VNĐ</td>
                         <td id="tong_tien_nhan_nha_pttt_vay">0 VNĐ</td>
                     </tr>
@@ -587,23 +637,30 @@
                         <td>Ưu điểm</td>
                         <td>
                             <ul class="list-disc pl-5">
-                                <li class="advantage">Thanh toán theo tiến độ, giảm áp lực tài chính ban đầu</li>
-                                <li class="advantage">Mỗi đợt thanh toán chỉ 2.5% GTCH</li>
-                                <li class="advantage">Phù hợp với khách hàng có dòng tiền đều đặn hàng tháng</li>
+                                <li class="advantage">Thanh toán theo thời gian đều đặn</li>
+                                <li class="advantage">Dễ lập kế hoạch tài chính</li>
+                                <li class="advantage">Phù hợp thu nhập ổn định</li>
                             </ul>
                         </td>
                         <td>
                             <ul class="list-disc pl-5">
-                                <li class="advantage">Chiết khấu lớn 8% cho 60% GTCH</li>
-                                <li class="advantage">Tiết kiệm tổng chi phí so với các PTTT khác</li>
-                                <li class="advantage">Thanh toán sớm giảm rủi ro biến động lãi suất</li>
+                                <li class="advantage">Thanh toán theo tiến độ thực tế</li>
+                                <li class="advantage">Giảm rủi ro dự án</li>
+                                <li class="advantage">Minh bạch tiến độ</li>
                             </ul>
                         </td>
                         <td>
                             <ul class="list-disc pl-5">
-                                <li class="advantage">Chỉ cần 8.6% GTCH để nhận nhà</li>
-                                <li class="advantage">Được hỗ trợ lãi suất trong 24 tháng</li>
-                                <li class="advantage">Ân hạn nợ gốc trong thời gian đầu</li>
+                                <li class="advantage">Chiết khấu lớn 8%</li>
+                                <li class="advantage">Tiết kiệm chi phí tổng</li>
+                                <li class="advantage">Thanh toán nhanh</li>
+                            </ul>
+                        </td>
+                        <td>
+                            <ul class="list-disc pl-5">
+                                <li class="advantage">Chỉ cần 8.6% đến bàn giao</li>
+                                <li class="advantage">Hỗ trợ lãi suất 24 tháng</li>
+                                <li class="advantage">Ân hạn nợ gốc</li>
                             </ul>
                         </td>
                     </tr>
@@ -611,23 +668,26 @@
                         <td>Nhược điểm</td>
                         <td>
                             <ul class="list-disc pl-5">
-                                <li class="disadvantage">Không có ưu đãi chiết khấu đặc biệt</li>
-                                <li class="disadvantage">Tổng chi phí cao hơn PTTT Nhanh</li>
-                                <li class="disadvantage">Phải thanh toán 70% GTCH trước khi nhận nhà</li>
+                                <li class="disadvantage">Thời gian thanh toán dài</li>
+                                <li class="disadvantage">Nhiều đợt thanh toán</li>
                             </ul>
                         </td>
                         <td>
                             <ul class="list-disc pl-5">
-                                <li class="disadvantage">Yêu cầu nguồn vốn lớn ban đầu (70% GTCH)</li>
-                                <li class="disadvantage">Áp lực tài chính cao trong thời gian ngắn</li>
-                                <li class="disadvantage">Không phù hợp với người có vốn hạn chế</li>
+                                <li class="disadvantage">Phụ thuộc tiến độ xây dựng</li>
+                                <li class="disadvantage">Khó dự đoán thời gian</li>
                             </ul>
                         </td>
                         <td>
                             <ul class="list-disc pl-5">
-                                <li class="disadvantage">Chi phí lãi vay phát sinh sau thời gian hỗ trợ</li>
-                                <li class="disadvantage">Tổng chi phí cao nhất trong dài hạn</li>
-                                <li class="disadvantage">Rủi ro biến động lãi suất sau thời gian ưu đãi</li>
+                                <li class="disadvantage">Yêu cầu vốn lớn ban đầu</li>
+                                <li class="disadvantage">Áp lực tài chính cao</li>
+                            </ul>
+                        </td>
+                        <td>
+                            <ul class="list-disc pl-5">
+                                <li class="disadvantage">Chi phí lãi vay dài hạn</li>
+                                <li class="disadvantage">Rủi ro lãi suất tăng</li>
                             </ul>
                         </td>
                     </tr>
@@ -641,7 +701,7 @@
         </div>
         
         <div class="mt-6 text-center">
-            <p class="text-gray-600">Công cụ tính dòng tiền The Privé - Phiên bản 3.0</p>
+            <p class="text-gray-600">Công cụ tính dòng tiền The Privé - Phiên bản hoàn chỉnh</p>
             <p class="text-gray-600">Đại lý chiến lược OneS | HOTLINE: 090 398 3737</p>
         </div>
     </div>
@@ -649,1059 +709,803 @@
     <script>
         // Dữ liệu căn hộ
         const apartmentData = {
-            // Dữ liệu căn hộ Tháp 5
+            // Tháp 5, 6, 7 - Dữ liệu giống nhau
             "5": {
-                "01": {
-                    "type": "A1-1",
-                    "area_wall": 98.50,
-                    "area_carpet": 89.70,
-                    "direction": "Đông Bắc",
-                    "view": "Công viên, Thành phố",
-                    "layout_url": "https://i.postimg.cc/R0kStcS3/TW5-6-7-CH-A1-1.jpg",
-                    "bedrooms": 3
-                },
-                "02": {
-                    "type": "C1-1",
-                    "area_wall": 49.80,
-                    "area_carpet": 44.70,
-                    "direction": "Đông Nam",
-                    "view": "Nội khu, Thành phố",
-                    "layout_url": "https://i.postimg.cc/hvSq8sHG/TW5-6-7-CH-C1-1.jpg",
-                    "bedrooms": 1
-                },
-                "03": {
-                    "type": "B4-1",
-                    "area_wall": 76.30,
-                    "area_carpet": 70.20,
-                    "direction": "Nam",
-                    "view": "Nội khu, Thành phố",
-                    "layout_url": "https://i.postimg.cc/CKqYwzGw/TW5-6-7-CH-B4-1.jpg",
-                    "bedrooms": 2
-                },
-                "04": {
-                    "type": "B5-1",
-                    "area_wall": 80.60,
-                    "area_carpet": 73.30,
-                    "direction": "Tây Nam",
-                    "view": "Sông, Thành phố",
-                    "layout_url": "https://i.postimg.cc/B6501k7y/TW5-6-7-CH-B5-1.jpg",
-                    "bedrooms": 2
-                },
-                "05": {
-                    "type": "B6-1",
-                    "area_wall": 81.00,
-                    "area_carpet": 73.90,
-                    "direction": "Tây Nam",
-                    "view": "Sông, Thành phố",
-                    "layout_url": "https://i.postimg.cc/mDW4kBjC/TW5-6-7-CH-B6-1.jpg",
-                    "bedrooms": 2
-                },
-                "06": {
-                    "type": "A2-1",
-                    "area_wall": 98.50,
-                    "area_carpet": 89.40,
-                    "direction": "Tây Bắc",
-                    "view": "Công viên, Thành phố",
-                    "layout_url": "https://i.postimg.cc/kGcqLzx8/TW5-6-7-CH-A2-1.jpg",
-                    "bedrooms": 3
-                },
-                "07": {
-                    "type": "B1-1",
-                    "area_wall": 80.90,
-                    "area_carpet": 74.90,
-                    "direction": "Bắc",
-                    "view": "Nội khu, Thành phố",
-                    "layout_url": "https://i.postimg.cc/DfdvWJtZ/TW5-6-7-CH-B1-1.jpg",
-                    "bedrooms": 2
-                },
-                "08": {
-                    "type": "B2-1",
-                    "area_wall": 88.70,
-                    "area_carpet": 80.70,
-                    "direction": "Đông Bắc",
-                    "view": "Công viên, Thành phố",
-                    "layout_url": "https://i.postimg.cc/jdxsyqbh/TW5-6-7-CH-B2-1.jpg",
-                    "bedrooms": 2
-                },
-                "09": {
-                    "type": "B3-1",
-                    "area_wall": 71.50,
-                    "area_carpet": 64.90,
-                    "direction": "Đông Bắc",
-                    "view": "Công viên, Thành phố",
-                    "layout_url": "https://i.postimg.cc/FzmhWNJN/TW5-6-7-CH-B3-1.jpg",
-                    "bedrooms": 2
-                }
+                "01": { "type": "A1-1", "area_wall": 98.50, "area_carpet": 89.70, "direction": "Đông Bắc", "view": "View Bắc: Cao tốc TP.HCM-Long Thành-Dầu Giây, Đường sắt đô thị", "layout_url": "https://i.postimg.cc/R0kStcS3/TW5-6-7-CH-A1-1.jpg", "bedrooms": 3 },
+                "02": { "type": "C1-1", "area_wall": 49.80, "area_carpet": 44.70, "direction": "Đông Nam", "view": "View Tây: Sông Giồng Ông Tố, Nút giao An Phú", "layout_url": "https://i.postimg.cc/hvSq8sHG/TW5-6-7-CH-C1-1.jpg", "bedrooms": 1 },
+                "03": { "type": "B4-1", "area_wall": 76.30, "area_carpet": 70.20, "direction": "Nam", "view": "View Đông: Cao tốc TP.HCM-Long Thành-Dầu Giây", "layout_url": "https://i.postimg.cc/CKqYwzGw/TW5-6-7-CH-B4-1.jpg", "bedrooms": 2 },
+                "04": { "type": "B5-1", "area_wall": 80.60, "area_carpet": 73.30, "direction": "Tây Nam", "view": "View Nam: Sông Giồng Ông Tố, Cầu Phú Mỹ", "layout_url": "https://i.postimg.cc/B6501k7y/TW5-6-7-CH-B5-1.jpg", "bedrooms": 2 },
+                "05": { "type": "B6-1", "area_wall": 81.00, "area_carpet": 73.90, "direction": "Tây Nam", "view": "View Nam: Sông Giồng Ông Tố, Cầu Phú Mỹ", "layout_url": "https://i.postimg.cc/mDW4kBjC/TW5-6-7-CH-B6-1.jpg", "bedrooms": 2 },
+                "06": { "type": "A2-1", "area_wall": 98.50, "area_carpet": 89.40, "direction": "Tây Bắc", "view": "View Bắc: Cao tốc TP.HCM-Long Thành-Dầu Giây", "layout_url": "https://i.postimg.cc/kGcqLzx8/TW5-6-7-CH-A2-1.jpg", "bedrooms": 3 },
+                "07": { "type": "B1-1", "area_wall": 80.90, "area_carpet": 74.90, "direction": "Bắc", "view": "View Tây: Sông Giồng Ông Tố, Nút giao An Phú", "layout_url": "https://i.postimg.cc/DfdvWJtZ/TW5-6-7-CH-B1-1.jpg", "bedrooms": 2 },
+                "08": { "type": "B2-1", "area_wall": 88.70, "area_carpet": 80.70, "direction": "Đông Bắc", "view": "View Bắc: Cao tốc TP.HCM-Long Thành-Dầu Giây", "layout_url": "https://i.postimg.cc/jdxsyqbh/TW5-6-7-CH-B2-1.jpg", "bedrooms": 2 },
+                "09": { "type": "B3-1", "area_wall": 71.50, "area_carpet": 64.90, "direction": "Đông Bắc", "view": "View Bắc: Cao tốc TP.HCM-Long Thành-Dầu Giây", "layout_url": "https://i.postimg.cc/FzmhWNJN/TW5-6-7-CH-B3-1.jpg", "bedrooms": 2 }
             },
-            // Dữ liệu căn hộ Tháp 6 (giữ nguyên như tháp 5 cho demo)
-            "6": {
-                "01": {
-                    "type": "A1-1",
-                    "area_wall": 98.50,
-                    "area_carpet": 89.70,
-                    "direction": "Đông Bắc",
-                    "view": "Công viên, Thành phố",
-                    "layout_url": "https://i.postimg.cc/R0kStcS3/TW5-6-7-CH-A1-1.jpg",
-                    "bedrooms": 3
-                },
-                "02": {
-                    "type": "C1-1",
-                    "area_wall": 49.80,
-                    "area_carpet": 44.70,
-                    "direction": "Đông Nam",
-                    "view": "Nội khu, Thành phố",
-                    "layout_url": "https://i.postimg.cc/hvSq8sHG/TW5-6-7-CH-C1-1.jpg",
-                    "bedrooms": 1
-                },
-                "03": {
-                    "type": "B4-1",
-                    "area_wall": 76.30,
-                    "area_carpet": 70.20,
-                    "direction": "Nam",
-                    "view": "Nội khu, Thành phố",
-                    "layout_url": "https://i.postimg.cc/CKqYwzGw/TW5-6-7-CH-B4-1.jpg",
-                    "bedrooms": 2
-                },
-                "04": {
-                    "type": "B5-1",
-                    "area_wall": 80.60,
-                    "area_carpet": 73.30,
-                    "direction": "Tây Nam",
-                    "view": "Sông, Thành phố",
-                    "layout_url": "https://i.postimg.cc/B6501k7y/TW5-6-7-CH-B5-1.jpg",
-                    "bedrooms": 2
-                },
-                "05": {
-                    "type": "B6-1",
-                    "area_wall": 81.00,
-                    "area_carpet": 73.90,
-                    "direction": "Tây Nam",
-                    "view": "Sông, Thành phố",
-                    "layout_url": "https://i.postimg.cc/mDW4kBjC/TW5-6-7-CH-B6-1.jpg",
-                    "bedrooms": 2
-                },
-                "06": {
-                    "type": "A2-1",
-                    "area_wall": 98.50,
-                    "area_carpet": 89.40,
-                    "direction": "Tây Bắc",
-                    "view": "Công viên, Thành phố",
-                    "layout_url": "https://i.postimg.cc/kGcqLzx8/TW5-6-7-CH-A2-1.jpg",
-                    "bedrooms": 3
-                },
-                "07": {
-                    "type": "B1-1",
-                    "area_wall": 80.90,
-                    "area_carpet": 74.90,
-                    "direction": "Bắc",
-                    "view": "Nội khu, Thành phố",
-                    "layout_url": "https://i.postimg.cc/DfdvWJtZ/TW5-6-7-CH-B1-1.jpg",
-                    "bedrooms": 2
-                },
-                "08": {
-                    "type": "B2-1",
-                    "area_wall": 88.70,
-                    "area_carpet": 80.70,
-                    "direction": "Đông Bắc",
-                    "view": "Công viên, Thành phố",
-                    "layout_url": "https://i.postimg.cc/jdxsyqbh/TW5-6-7-CH-B2-1.jpg",
-                    "bedrooms": 2
-                },
-                "09": {
-                    "type": "B3-1",
-                    "area_wall": 71.50,
-                    "area_carpet": 64.90,
-                    "direction": "Đông Bắc",
-                    "view": "Công viên, Thành phố",
-                    "layout_url": "https://i.postimg.cc/FzmhWNJN/TW5-6-7-CH-B3-1.jpg",
-                    "bedrooms": 2
-                }
-            },
-            // Dữ liệu căn hộ Tháp 7 (giữ nguyên như tháp 5 cho demo)
-            "7": {
-                "01": {
-                    "type": "A1-1",
-                    "area_wall": 98.50,
-                    "area_carpet": 89.70,
-                    "direction": "Đông Bắc",
-                    "view": "Công viên, Thành phố",
-                    "layout_url": "https://i.postimg.cc/R0kStcS3/TW5-6-7-CH-A1-1.jpg",
-                    "bedrooms": 3
-                },
-                "02": {
-                    "type": "C1-1",
-                    "area_wall": 49.80,
-                    "area_carpet": 44.70,
-                    "direction": "Đông Nam",
-                    "view": "Nội khu, Thành phố",
-                    "layout_url": "https://i.postimg.cc/hvSq8sHG/TW5-6-7-CH-C1-1.jpg",
-                    "bedrooms": 1
-                },
-                "03": {
-                    "type": "B4-1",
-                    "area_wall": 76.30,
-                    "area_carpet": 70.20,
-                    "direction": "Nam",
-                    "view": "Nội khu, Thành phố",
-                    "layout_url": "https://i.postimg.cc/CKqYwzGw/TW5-6-7-CH-B4-1.jpg",
-                    "bedrooms": 2
-                },
-                "04": {
-                    "type": "B5-1",
-                    "area_wall": 80.60,
-                    "area_carpet": 73.30,
-                    "direction": "Tây Nam",
-                    "view": "Sông, Thành phố",
-                    "layout_url": "https://i.postimg.cc/B6501k7y/TW5-6-7-CH-B5-1.jpg",
-                    "bedrooms": 2
-                },
-                "05": {
-                    "type": "B6-1",
-                    "area_wall": 81.00,
-                    "area_carpet": 73.90,
-                    "direction": "Tây Nam",
-                    "view": "Sông, Thành phố",
-                    "layout_url": "https://i.postimg.cc/mDW4kBjC/TW5-6-7-CH-B6-1.jpg",
-                    "bedrooms": 2
-                },
-                "06": {
-                    "type": "A2-1",
-                    "area_wall": 98.50,
-                    "area_carpet": 89.40,
-                    "direction": "Tây Bắc",
-                    "view": "Công viên, Thành phố",
-                    "layout_url": "https://i.postimg.cc/kGcqLzx8/TW5-6-7-CH-A2-1.jpg",
-                    "bedrooms": 3
-                },
-                "07": {
-                    "type": "B1-1",
-                    "area_wall": 80.90,
-                    "area_carpet": 74.90,
-                    "direction": "Bắc",
-                    "view": "Nội khu, Thành phố",
-                    "layout_url": "https://i.postimg.cc/DfdvWJtZ/TW5-6-7-CH-B1-1.jpg",
-                    "bedrooms": 2
-                },
-                "08": {
-                    "type": "B2-1",
-                    "area_wall": 88.70,
-                    "area_carpet": 80.70,
-                    "direction": "Đông Bắc",
-                    "view": "Công viên, Thành phố",
-                    "layout_url": "https://i.postimg.cc/jdxsyqbh/TW5-6-7-CH-B2-1.jpg",
-                    "bedrooms": 2
-                },
-                "09": {
-                    "type": "B3-1",
-                    "area_wall": 71.50,
-                    "area_carpet": 64.90,
-                    "direction": "Đông Bắc",
-                    "view": "Công viên, Thành phố",
-                    "layout_url": "https://i.postimg.cc/FzmhWNJN/TW5-6-7-CH-B3-1.jpg",
-                    "bedrooms": 2
-                }
-            },
-            // Dữ liệu căn hộ Tháp 8 (mới bổ sung)
+            // Tháp 8 - Dữ liệu chi tiết theo yêu cầu
             "8": {
-                "01": {
-                    "type": "B3-2",
-                    "area_wall": 71.50,
-                    "area_carpet": 64.90,
-                    "direction": "Chính Bắc (có cửa sổ/ban công phụ hướng Đông)",
-                    "view": "Cao tốc TP.HCM-Long Thành-Dầu Giây, Đường sắt đô thị, Khu liên hợp TDTT",
-                    "layout_url": "https://sv1.anhsieuviet.com/2025/05/23/TW8---CH-B3-2.jpg",
-                    "bedrooms": 2
-                },
-                "02": {
-                    "type": "B2-2",
-                    "area_wall": 88.70,
-                    "area_carpet": 80.70,
-                    "direction": "Chính Đông",
-                    "view": "Cao tốc TP.HCM-Long Thành-Dầu Giây, Đường sắt đô thị, Sông Giồng Ông Tố",
-                    "layout_url": "https://sv1.anhsieuviet.com/2025/05/23/TW-8---CH-B2-2.jpg",
-                    "bedrooms": 2
-                },
-                "03": {
-                    "type": "B1-2",
-                    "area_wall": 80.90,
-                    "area_carpet": 74.90,
-                    "direction": "Chính Đông (có cửa sổ/ban công phụ hướng Nam)",
-                    "view": "Cao tốc TP.HCM-Long Thành-Dầu Giây, Sông Giồng Ông Tố, Cầu Phú Mỹ",
-                    "layout_url": "https://sv1.anhsieuviet.com/2025/05/23/TW8---CH-B1-2.jpg",
-                    "bedrooms": 2
-                },
-                "04": {
-                    "type": "A2a-2",
-                    "area_wall": 98.50,
-                    "area_carpet": 89.40,
-                    "direction": "Chính Nam (có cửa sổ/ban công phụ hướng Đông)",
-                    "view": "Sông Giồng Ông Tố, Cầu Phú Mỹ, Cảng Cát Lái, Cầu Cát Lái",
-                    "layout_url": "https://sv1.anhsieuviet.com/2025/05/23/TW8---CH-A2-2.jpg",
-                    "bedrooms": 3
-                },
-                "05": {
-                    "type": "B6-2",
-                    "area_wall": 81.00,
-                    "area_carpet": 73.90,
-                    "direction": "Chính Nam",
-                    "view": "Sông Giồng Ông Tố, Cầu Phú Mỹ, Cảng Cát Lái, Cầu Cát Lái",
-                    "layout_url": "https://sv1.anhsieuviet.com/2025/05/23/TW-8---CH-B6-2.jpg",
-                    "bedrooms": 2
-                },
-                "06": {
-                    "type": "B5-2",
-                    "area_wall": 80.60,
-                    "area_carpet": 73.30,
-                    "direction": "Chính Tây (có cửa sổ/ban công phụ hướng Nam)",
-                    "view": "Sông Giồng Ông Tố, Nút giao An Phú, Ga Thủ Thiêm, Landmark 81",
-                    "layout_url": "https://sv1.anhsieuviet.com/2025/05/23/TW8---CH-B5-2.jpg",
-                    "bedrooms": 2
-                },
-                "07": {
-                    "type": "B4-2",
-                    "area_wall": 76.30,
-                    "area_carpet": 70.20,
-                    "direction": "Chính Tây",
-                    "view": "Sông Giồng Ông Tố, Nút giao An Phú, Ga Thủ Thiêm, Landmark 81",
-                    "layout_url": "https://sv1.anhsieuviet.com/2025/05/23/TW8---CH-B4-2.jpg",
-                    "bedrooms": 2
-                },
-                "08": {
-                    "type": "C1-2",
-                    "area_wall": 49.80,
-                    "area_carpet": 44.70,
-                    "direction": "Chính Tây",
-                    "view": "Sông Giồng Ông Tố, Nút giao An Phú, Ga Thủ Thiêm, Landmark 81",
-                    "layout_url": "https://sv1.anhsieuviet.com/2025/05/23/TW8---CH-C1-2.jpg",
-                    "bedrooms": 1
-                },
-                "09": {
-                    "type": "A1-2",
-                    "area_wall": 98.50,
-                    "area_carpet": 89.70,
-                    "direction": "Chính Bắc (có cửa sổ/ban công phụ hướng Tây)",
-                    "view": "Cao tốc TP.HCM-Long Thành-Dầu Giây, Đường sắt đô thị, Khu liên hợp TDTT",
-                    "layout_url": "https://sv1.anhsieuviet.com/2025/05/23/TW8---CH-A1-2.jpg",
-                    "bedrooms": 3
-                }
+                "01": { "type": "B3-2", "area_wall": 71.50, "area_carpet": 64.90, "direction": "Chính Bắc (có cửa sổ/ban công phụ hướng Đông)", "view": "View Bắc: Cao tốc TP.HCM-Long Thành-Dầu Giây, Đường sắt đô thị Thủ Thiêm-Long Thành, Khu liên hợp TDTT quốc gia Rạch Chiếc, Các khu đô thị hiện đại. View Đông (phụ): Cao tốc TP.HCM-Long Thành-Dầu Giây, Đường sắt đô thị Thủ Thiêm-Long Thành, Sông Giồng Ông Tố, Các khu đô thị hiện đại", "layout_url": "https://sv1.anhsieuviet.com/2025/05/23/TW8---CH-B3-2.jpg", "bedrooms": 2 },
+                "02": { "type": "B2-2", "area_wall": 88.70, "area_carpet": 80.70, "direction": "Chính Đông", "view": "View Đông: Cao tốc TP.HCM-Long Thành-Dầu Giây, Đường sắt đô thị Thủ Thiêm-Long Thành, Sông Giồng Ông Tố, Các khu đô thị hiện đại", "layout_url": "https://sv1.anhsieuviet.com/2025/05/23/TW-8---CH-B2-2.jpg", "bedrooms": 2 },
+                "03": { "type": "B1-2", "area_wall": 80.90, "area_carpet": 74.90, "direction": "Chính Đông (có cửa sổ/ban công phụ hướng Nam)", "view": "View Đông: Cao tốc TP.HCM-Long Thành-Dầu Giây, Đường sắt đô thị Thủ Thiêm-Long Thành, Sông Giồng Ông Tố, Các khu đô thị hiện đại. View Nam (phụ): Sông Giồng Ông Tố, Cầu Phú Mỹ, Cảng Cát Lái, Cầu Cát Lái", "layout_url": "https://sv1.anhsieuviet.com/2025/05/23/TW8---CH-B1-2.jpg", "bedrooms": 2 },
+                "04": { "type": "A2a-2", "area_wall": 98.50, "area_carpet": 89.40, "direction": "Chính Nam (có cửa sổ/ban công phụ hướng Đông)", "view": "View Nam: Sông Giồng Ông Tố, Cầu Phú Mỹ, Cảng Cát Lái, Cầu Cát Lái. View Đông (phụ): Cao tốc TP.HCM-Long Thành-Dầu Giây, Đường sắt đô thị Thủ Thiêm-Long Thành, Sông Giồng Ông Tố, Các khu đô thị hiện đại", "layout_url": "https://sv1.anhsieuviet.com/2025/05/23/TW8---CH-A2-2.jpg", "bedrooms": 3 },
+                "05": { "type": "B6-2", "area_wall": 81.00, "area_carpet": 73.90, "direction": "Chính Nam", "view": "View Nam: Sông Giồng Ông Tố, Cầu Phú Mỹ, Cảng Cát Lái, Cầu Cát Lái", "layout_url": "https://sv1.anhsieuviet.com/2025/05/23/TW-8---CH-B6-2.jpg", "bedrooms": 2 },
+                "06": { "type": "B5-2", "area_wall": 80.60, "area_carpet": 73.30, "direction": "Chính Tây (có cửa sổ/ban công phụ hướng Nam)", "view": "View Tây: Sông Giồng Ông Tố, Nút giao An Phú, Ga Thủ Thiêm, Landmark 81. View Nam (phụ): Sông Giồng Ông Tố, Cầu Phú Mỹ, Cảng Cát Lái, Cầu Cát Lái", "layout_url": "https://sv1.anhsieuviet.com/2025/05/23/TW8---CH-B5-2.jpg", "bedrooms": 2 },
+                "07": { "type": "B4-2", "area_wall": 76.30, "area_carpet": 70.20, "direction": "Chính Tây", "view": "View Tây: Sông Giồng Ông Tố, Nút giao An Phú, Ga Thủ Thiêm, Landmark 81", "layout_url": "https://sv1.anhsieuviet.com/2025/05/23/TW8---CH-B4-2.jpg", "bedrooms": 2 },
+                "08": { "type": "C1-2", "area_wall": 49.80, "area_carpet": 44.70, "direction": "Chính Tây", "view": "View Tây: Sông Giồng Ông Tố, Nút giao An Phú, Ga Thủ Thiêm, Landmark 81", "layout_url": "https://sv1.anhsieuviet.com/2025/05/23/TW8---CH-C1-2.jpg", "bedrooms": 1 },
+                "09": { "type": "A1-2", "area_wall": 98.50, "area_carpet": 89.70, "direction": "Chính Bắc (có cửa sổ/ban công phụ hướng Tây)", "view": "View Bắc: Cao tốc TP.HCM-Long Thành-Dầu Giây, Đường sắt đô thị Thủ Thiêm-Long Thành, Khu liên hợp TDTT quốc gia Rạch Chiếc, Các khu đô thị hiện đại. View Tây (phụ): Sông Giồng Ông Tố, Nút giao An Phú, Ga Thủ Thiêm, Landmark 81", "layout_url": "https://sv1.anhsieuviet.com/2025/05/23/TW8---CH-A1-2.jpg", "bedrooms": 3 }
             }
         };
 
-        // Hình ảnh mặt bằng tầng
-        const floorPlanImages = {
-            "5": {
-                "normal": "https://i.postimg.cc/52vKWZXz/MB-TANG-DIEN-HINH-THAP-5-6-7.png",
-                "20": "https://i.postimg.cc/Gh4SqBrq/MB-TANG-20-THAP-5-6-7.png",
-                "21": "https://i.postimg.cc/TYBNSR3G/MB-TANG-21-THAP-5-6-7.png"
-            },
-            "6": {
-                "normal": "https://i.postimg.cc/52vKWZXz/MB-TANG-DIEN-HINH-THAP-5-6-7.png",
-                "20": "https://i.postimg.cc/Gh4SqBrq/MB-TANG-20-THAP-5-6-7.png",
-                "21": "https://i.postimg.cc/TYBNSR3G/MB-TANG-21-THAP-5-6-7.png"
-            },
-            "7": {
-                "normal": "https://i.postimg.cc/52vKWZXz/MB-TANG-DIEN-HINH-THAP-5-6-7.png",
-                "20": "https://i.postimg.cc/Gh4SqBrq/MB-TANG-20-THAP-5-6-7.png",
-                "21": "https://i.postimg.cc/TYBNSR3G/MB-TANG-21-THAP-5-6-7.png"
-            },
-            "8": {
-                "normal": "https://sv1.anhsieuviet.com/2025/05/23/TANG-DIEN-HINH_TW8.png",
-                "20": "https://sv1.anhsieuviet.com/2025/05/23/TANG-20_TW8.png",
-                "21": "https://sv1.anhsieuviet.com/2025/05/23/TANG-21_TW8.png"
-            }
-        };
+        // Copy dữ liệu tháp 5 cho tháp 6 và 7
+        apartmentData["6"] = JSON.parse(JSON.stringify(apartmentData["5"]));
+        apartmentData["7"] = JSON.parse(JSON.stringify(apartmentData["5"]));
 
-        // Mặt bằng tổng của từng tháp
-        const totalPlanImages = {
-            "5": "https://lh3.googleusercontent.com/d/1dmKiMsmvS5YTtj5pZ7bSWfE8FGta_EHD",
-            "6": "https://lh3.googleusercontent.com/d/1dmKiMsmvS5YTtj5pZ7bSWfE8FGta_EHD",
-            "7": "https://lh3.googleusercontent.com/d/1dmKiMsmvS5YTtj5pZ7bSWfE8FGta_EHD",
-            "8": "https://sv1.anhsieuviet.com/2025/05/23/MT-BNG-TNG-THAP-TW8.png"
-        };
+        // Biến toàn cục
+        let cashFlowChart = null;
+        let currentCalculationData = {};
 
-        // Global variables
-        let gia_ban_cuoi_cung_gom_vat_sau_ck_chung = 0;
-        let phi_bao_tri_amount = 0;
-        let selectedTower = "";
-        let selectedApartment = "";
-        let selectedFloor = "";
-        
-        // Format currency
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount).replace('₫', 'VNĐ');
+        // Khởi tạo
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            updateFloorOptions();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('tower').addEventListener('change', updateApartmentOptions);
+            document.getElementById('apartment_code').addEventListener('change', updateFloorOptions);
+            document.getElementById('floor').addEventListener('change', updateApartmentInfo);
+            document.getElementById('calculate_btn').addEventListener('click', calculateAll);
+
+            // Tự động tính toán khi thay đổi thông tin
+            const autoCalculateInputs = ['gia_m2', 'vat_percent', 'phi_bao_tri_percent', 'von_tu_co', 'thu_nhap_hang_thang'];
+            autoCalculateInputs.forEach(id => {
+                document.getElementById(id).addEventListener('input', calculateAll);
+            });
+
+            // Tự động tính toán khi thay đổi ưu đãi
+            document.getElementById('chiet_khau_nguyen_vong').addEventListener('change', calculateAll);
+            document.querySelectorAll('.chiet_khau_dac_biet').forEach(el => {
+                el.addEventListener('change', calculateAll);
+            });
+            document.querySelectorAll('input[name="chiet_khau_mua_nhieu"]').forEach(el => {
+                el.addEventListener('change', calculateAll);
+            });
+            document.querySelectorAll('input[name="voucher_uu_dai"]').forEach(el => {
+                el.addEventListener('change', calculateAll);
+            });
         }
-        
-        // Format percentage
-        function formatPercent(value) {
-            return value.toFixed(2).replace(/\.00$/, '');
-        }
-        
-        // Handle tower selection
-        document.getElementById('tower').addEventListener('change', function() {
-            selectedTower = this.value;
-            const apartmentCodeSelect = document.getElementById('apartment_code');
-            apartmentCodeSelect.innerHTML = '<option value="">Chọn mã căn hộ</option>';
-            apartmentCodeSelect.disabled = !this.value;
+
+        function updateApartmentOptions() {
+            const tower = document.getElementById('tower').value;
+            const apartmentSelect = document.getElementById('apartment_code');
             
-            if (this.value) {
-                // Update mặt bằng tổng
-                document.getElementById('mat_bang_tong').src = totalPlanImages[this.value];
-                
-                // Add apartment options
-                for (const code in apartmentData[this.value]) {
+            apartmentSelect.innerHTML = '<option value="">Chọn mã căn hộ</option>';
+            
+            if (tower && apartmentData[tower]) {
+                apartmentSelect.disabled = false;
+                Object.keys(apartmentData[tower]).forEach(code => {
                     const option = document.createElement('option');
                     option.value = code;
-                    option.textContent = code;
-                    apartmentCodeSelect.appendChild(option);
-                }
-                
-                // Reset floor selection
-                document.getElementById('floor').innerHTML = '<option value="">Chọn tầng</option>';
+                    option.textContent = `Căn ${code}`;
+                    apartmentSelect.appendChild(option);
+                });
+            } else {
+                apartmentSelect.disabled = true;
                 document.getElementById('floor').disabled = true;
-                
-                // Reset values
-                document.getElementById('ma_can_ho').value = '';
-                document.getElementById('dien_tich_tim_tuong').value = '';
-                document.getElementById('dien_tich_thong_thuy').value = '';
-                document.getElementById('huong_can').value = '';
-                document.getElementById('view_can').value = '';
-                document.getElementById('loai_can_ho').value = '';
-                document.getElementById('layout_image').classList.add('hidden');
             }
-        });
-        
-        // Handle apartment code selection
-        document.getElementById('apartment_code').addEventListener('change', function() {
-            selectedApartment = this.value;
-            const floorSelect = document.getElementById('floor');
-            floorSelect.innerHTML = '<option value="">Chọn tầng</option>';
-            floorSelect.disabled = !this.value;
             
-            if (this.value) {
-                // Populate floor options
-                // In tháp 8, căn số 05 (B6-2) không có ở tầng 20 và 21
-                if (selectedTower === "8" && selectedApartment === "05") {
-                    for (let i = 4; i <= 19; i++) {
-                        const option = document.createElement('option');
-                        option.value = i;
-                        option.textContent = i;
-                        floorSelect.appendChild(option);
-                    }
-                    for (let i = 22; i <= 31; i++) {
-                        const option = document.createElement('option');
-                        option.value = i;
-                        option.textContent = i;
-                        floorSelect.appendChild(option);
-                    }
-                } else {
-                    for (let i = 4; i <= 31; i++) {
-                        const option = document.createElement('option');
-                        option.value = i;
-                        option.textContent = i;
-                        floorSelect.appendChild(option);
-                    }
-                }
-            }
-        });
-        
-        // Handle floor selection
-        document.getElementById('floor').addEventListener('change', function() {
-            selectedFloor = this.value;
-            
-            if (this.value) {
-                const apartmentInfo = apartmentData[selectedTower][selectedApartment];
-                
-                // Update floor plan image based on floor
-                let floorPlanImage;
-                if (this.value == 20) {
-                    floorPlanImage = floorPlanImages[selectedTower]["20"];
-                } else if (this.value == 21) {
-                    floorPlanImage = floorPlanImages[selectedTower]["21"];
-                } else {
-                    floorPlanImage = floorPlanImages[selectedTower]["normal"];
-                }
-                
-                document.getElementById('mat_bang_tang').src = floorPlanImage;
-                
-                // Update apartment info
-                document.getElementById('ma_can_ho').value = `${selectedTower}-${selectedFloor}-${selectedApartment}`;
-                document.getElementById('dien_tich_tim_tuong').value = apartmentInfo.area_wall;
-                document.getElementById('dien_tich_thong_thuy').value = apartmentInfo.area_carpet;
-                document.getElementById('huong_can').value = apartmentInfo.direction;
-                document.getElementById('view_can').value = apartmentInfo.view;
-                document.getElementById('loai_can_ho').value = `${apartmentInfo.type} (${apartmentInfo.bedrooms} Phòng ngủ)`;
-                
-                // Show layout image
-                const layoutImage = document.getElementById('layout_image');
-                layoutImage.src = apartmentInfo.layout_url;
-                layoutImage.classList.remove('hidden');
-            }
-        });
-        
-        // Show active tab
-        function openTab(tabName) {
-            const tabs = document.querySelectorAll('.tab');
-            const buttons = document.querySelectorAll('.tab-btn');
-            
-            tabs.forEach(tab => tab.classList.remove('active'));
-            buttons.forEach(btn => btn.classList.remove('active'));
-            
-            document.getElementById(tabName).classList.add('active');
-            event.currentTarget.classList.add('active');
+            updateFloorPlan();
+            clearApartmentInfo();
         }
-        
-        // Calculate button click handler
-        document.getElementById('calculate_btn').addEventListener('click', calculateAll);
-        
-        // Calculate all values
-        function calculateAll() {
-            // Get input values
-            const dien_tich_tim_tuong = parseFloat(document.getElementById('dien_tich_tim_tuong').value) || 0;
-            const gia_m2 = parseFloat(document.getElementById('gia_m2').value) || 0;
-            const vat_percent = parseFloat(document.getElementById('vat_percent').value) || 10;
-            const phi_bao_tri_percent = parseFloat(document.getElementById('phi_bao_tri_percent').value) || 2;
+
+        function updateFloorOptions() {
+            const tower = document.getElementById('tower').value;
+            const apartmentCode = document.getElementById('apartment_code').value;
+            const floorSelect = document.getElementById('floor');
             
-            // Calculate basic apartment value
-            const gia_ban_can_ho_truoc_vat = dien_tich_tim_tuong * gia_m2;
+            floorSelect.innerHTML = '<option value="">Chọn tầng</option>';
+            
+            if (tower && apartmentCode) {
+                floorSelect.disabled = false;
+                
+                // Tầng 4-31, nhưng tháp 8 căn 05 tầng 20,21 là GLN
+                for (let i = 4; i <= 31; i++) {
+                    if (tower === '8' && apartmentCode === '05' && (i === 20 || i === 21)) {
+                        continue; // Bỏ qua tầng 20,21 cho căn 05 tháp 8 (GLN)
+                    }
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = `Tầng ${i}`;
+                    floorSelect.appendChild(option);
+                }
+            } else {
+                floorSelect.disabled = true;
+            }
+            
+            clearApartmentInfo();
+        }
+
+        function updateFloorPlan() {
+            const tower = document.getElementById('tower').value;
+            const floor = document.getElementById('floor').value;
+            const floorPlanImg = document.getElementById('mat_bang_tang');
+            
+            if (tower === '8') {
+                // Tháp 8 có mặt bằng riêng
+                if (floor === '20') {
+                    floorPlanImg.src = 'https://sv1.anhsieuviet.com/2025/05/23/TANG-20_TW8.png';
+                } else if (floor === '21') {
+                    floorPlanImg.src = 'https://sv1.anhsieuviet.com/2025/05/23/TANG-21_TW8.png';
+                } else {
+                    floorPlanImg.src = 'https://sv1.anhsieuviet.com/2025/05/23/TANG-DIEN-HINH_TW8.png';
+                }
+            } else {
+                // Tháp 5,6,7
+                if (floor === '20') {
+                    floorPlanImg.src = 'https://i.postimg.cc/Gh4SqBrq/MB-TANG-20-THAP-5-6-7.png';
+                } else if (floor === '21') {
+                    floorPlanImg.src = 'https://i.postimg.cc/TYBNSR3G/MB-TANG-21-THAP-5-6-7.png';
+                } else {
+                    floorPlanImg.src = 'https://i.postimg.cc/52vKWZXz/MB-TANG-DIEN-HINH-THAP-5-6-7.png';
+                }
+            }
+        }
+
+        function updateApartmentInfo() {
+            const tower = document.getElementById('tower').value;
+            const apartmentCode = document.getElementById('apartment_code').value;
+            const floor = document.getElementById('floor').value;
+            
+            if (tower && apartmentCode && floor && apartmentData[tower] && apartmentData[tower][apartmentCode]) {
+                const apartment = apartmentData[tower][apartmentCode];
+                
+                // Cập nhật mặt bằng tầng
+                updateFloorPlan();
+                
+                // Cập nhật thông tin căn hộ
+                document.getElementById('ma_can_ho').value = `T${tower}.${apartmentCode}.${floor}`;
+                document.getElementById('dien_tich_tim_tuong').value = apartment.area_wall;
+                document.getElementById('dien_tich_thong_thuy').value = apartment.area_carpet;
+                document.getElementById('huong_can').value = apartment.direction;
+                document.getElementById('view_can').value = apartment.view;
+                document.getElementById('loai_can_ho').value = `${apartment.bedrooms} Phòng ngủ (${apartment.type})`;
+                
+                // Hiển thị layout căn hộ
+                const layoutImg = document.getElementById('layout_image');
+                layoutImg.src = apartment.layout_url;
+                layoutImg.classList.remove('hidden');
+                
+                // Tự động tính toán
+                calculateAll();
+            }
+        }
+
+        function clearApartmentInfo() {
+            document.getElementById('ma_can_ho').value = '';
+            document.getElementById('dien_tich_tim_tuong').value = '';
+            document.getElementById('dien_tich_thong_thuy').value = '';
+            document.getElementById('huong_can').value = '';
+            document.getElementById('view_can').value = '';
+            document.getElementById('loai_can_ho').value = '';
+            
+            const layoutImg = document.getElementById('layout_image');
+            layoutImg.classList.add('hidden');
+        }
+
+        function calculateAll() {
+            const gia_m2 = parseFloat(document.getElementById('gia_m2').value) || 0;
+            const dien_tich_tim_tuong = parseFloat(document.getElementById('dien_tich_tim_tuong').value) || 0;
+            
+            if (gia_m2 === 0 || dien_tich_tim_tuong === 0) {
+                return;
+            }
+            
+            // Tính giá bán cơ bản
+            const gia_ban_can_ho_truoc_vat = gia_m2 * dien_tich_tim_tuong;
+            const vat_percent = parseFloat(document.getElementById('vat_percent').value) || 10;
             const vat_amount = gia_ban_can_ho_truoc_vat * (vat_percent / 100);
             const tong_gia_ban_can_ho_gom_vat_ban_dau = gia_ban_can_ho_truoc_vat + vat_amount;
-            phi_bao_tri_amount = gia_ban_can_ho_truoc_vat * (phi_bao_tri_percent / 100);
             
-            // Calculate common discount
-            const chiet_khau_nguyen_vong_percent = document.getElementById('chiet_khau_nguyen_vong').checked ? 3 : 0;
+            // Tính phí bảo trì
+            const phi_bao_tri_percent = parseFloat(document.getElementById('phi_bao_tri_percent').value) || 2;
+            const phi_bao_tri_amount = gia_ban_can_ho_truoc_vat * (phi_bao_tri_percent / 100);
             
-            // Check if any special discount checkbox is checked
+            // Tính chiết khấu chung
+            let chiet_khau_nguyen_vong_percent = document.getElementById('chiet_khau_nguyen_vong').checked ? 3 : 0;
+            
             let chiet_khau_dac_biet_percent = 0;
-            const chiet_khau_dac_biet_checkboxes = document.querySelectorAll('.chiet_khau_dac_biet');
-            for (const checkbox of chiet_khau_dac_biet_checkboxes) {
-                if (checkbox.checked) {
-                    chiet_khau_dac_biet_percent = 2;
-                    break;
-                }
+            const dacBietChecked = document.querySelectorAll('.chiet_khau_dac_biet:checked');
+            if (dacBietChecked.length > 0) {
+                chiet_khau_dac_biet_percent = 2;
             }
             
-            // Get multiple product discount
             const chiet_khau_mua_nhieu_percent = parseFloat(document.querySelector('input[name="chiet_khau_mua_nhieu"]:checked').value) || 0;
             
-            // Calculate total common discount
             const tong_phan_tram_chiet_khau_chung = chiet_khau_nguyen_vong_percent + chiet_khau_dac_biet_percent + chiet_khau_mua_nhieu_percent;
             const tong_tien_chiet_khau_chung = tong_gia_ban_can_ho_gom_vat_ban_dau * (tong_phan_tram_chiet_khau_chung / 100);
-            gia_ban_cuoi_cung_gom_vat_sau_ck_chung = tong_gia_ban_can_ho_gom_vat_ban_dau - tong_tien_chiet_khau_chung;
+            const gia_ban_cuoi_cung_gom_vat_sau_ck_chung = tong_gia_ban_can_ho_gom_vat_ban_dau - tong_tien_chiet_khau_chung;
             
-            // Get voucher discount
-            const voucher_chiet_khau_value = parseFloat(document.querySelector('input[name="voucher_chiet_khau"]:checked').value) || 0;
-            const voucher_amount = gia_ban_cuoi_cung_gom_vat_sau_ck_chung * (voucher_chiet_khau_value / 100);
-
-            // Show/Hide voucher row
-            const voucherRow = document.getElementById('voucher_chiet_khau_row');
-            if (voucher_chiet_khau_value > 0) {
-                voucherRow.classList.remove('hidden');
-                document.getElementById('voucher_percent_display').textContent = voucher_chiet_khau_value;
-                document.getElementById('voucher_amount').textContent = formatCurrency(voucher_amount);
-            } else {
-                voucherRow.classList.add('hidden');
-            }
-
-            // Update display values
+            // CHÍNH XÁC: Đơn giá sau chiết khấu chung = Giá bán cuối cùng (bao gồm VAT, sau chiết khấu chung) / Diện tích tim tường
+            const don_gia_sau_ck_chung = gia_ban_cuoi_cung_gom_vat_sau_ck_chung / dien_tich_tim_tuong;
+            
+            // Tính voucher ưu đãi
+            const voucher_percent = parseFloat(document.querySelector('input[name="voucher_uu_dai"]:checked').value) || 0;
+            const voucher_amount = gia_ban_cuoi_cung_gom_vat_sau_ck_chung * (voucher_percent / 100);
+            const gia_ban_cuoi_cung_sau_voucher = gia_ban_cuoi_cung_gom_vat_sau_ck_chung - voucher_amount;
+            const don_gia_sau_voucher = gia_ban_cuoi_cung_sau_voucher / dien_tich_tim_tuong;
+            
+            // Cập nhật hiển thị
             document.getElementById('gia_ban_can_ho_truoc_vat').textContent = formatCurrency(gia_ban_can_ho_truoc_vat);
             document.getElementById('vat_percent_display').textContent = vat_percent;
             document.getElementById('vat_amount').textContent = formatCurrency(vat_amount);
             document.getElementById('tong_gia_ban_can_ho_gom_vat_ban_dau').textContent = formatCurrency(tong_gia_ban_can_ho_gom_vat_ban_dau);
             document.getElementById('phi_bao_tri_percent_display').textContent = phi_bao_tri_percent;
             document.getElementById('phi_bao_tri_amount').textContent = formatCurrency(phi_bao_tri_amount);
-            document.getElementById('tong_phan_tram_chiet_khau_chung').textContent = formatPercent(tong_phan_tram_chiet_khau_chung);
+            document.getElementById('tong_phan_tram_chiet_khau_chung').textContent = tong_phan_tram_chiet_khau_chung;
             document.getElementById('tong_tien_chiet_khau_chung').textContent = formatCurrency(tong_tien_chiet_khau_chung);
             document.getElementById('gia_ban_cuoi_cung_gom_vat_sau_ck_chung').textContent = formatCurrency(gia_ban_cuoi_cung_gom_vat_sau_ck_chung);
+            document.getElementById('don_gia_sau_ck_chung').textContent = formatCurrency(don_gia_sau_ck_chung);
+            document.getElementById('voucher_percent_display').textContent = voucher_percent;
+            document.getElementById('voucher_amount').textContent = formatCurrency(voucher_amount);
+            document.getElementById('gia_ban_cuoi_cung_sau_voucher').textContent = formatCurrency(gia_ban_cuoi_cung_sau_voucher);
+            document.getElementById('don_gia_sau_voucher').textContent = formatCurrency(don_gia_sau_voucher);
             
-            // Calculate payment schedules
-            calculatePTTTChuan();
-            calculatePTTTNhanh();
-            calculatePTTTVay();
+            // Lưu dữ liệu để sử dụng cho các phương thức thanh toán
+            currentCalculationData = {
+                gia_ban_cuoi_cung: voucher_amount > 0 ? gia_ban_cuoi_cung_sau_voucher : gia_ban_cuoi_cung_gom_vat_sau_ck_chung,
+                phi_bao_tri_amount: phi_bao_tri_amount,
+                tong_tien_chiet_khau_chung: tong_tien_chiet_khau_chung,
+                voucher_amount: voucher_amount
+            };
             
-            // Compare and recommend
-            compareAndRecommend();
+            // Tính toán các phương thức thanh toán
+            calculatePaymentMethods();
+            updateComparisonTable();
+            updateRecommendation();
+            updateCashFlowChart();
         }
-        
-        // Calculate Standard Payment Method (Phương thức thanh toán chuẩn)
-        function calculatePTTTChuan() {
+
+        function calculatePaymentMethods() {
+            const gia_ban = currentCalculationData.gia_ban_cuoi_cung;
+            const phi_bao_tri = currentCalculationData.phi_bao_tri_amount;
+            
+            // PTTT 1: Theo thời gian (26 đợt)
+            calculatePTTT1(gia_ban, phi_bao_tri);
+            
+            // PTTT 2: Theo tiến độ (12 đợt)
+            calculatePTTT2(gia_ban, phi_bao_tri);
+            
+            // PTTT 3: Nhanh
+            calculatePTTTNhanh(gia_ban, phi_bao_tri);
+            
+            // PTTT 4: Hỗ trợ vay
+            calculatePTTTVay(gia_ban, phi_bao_tri);
+        }
+
+        function calculatePTTT1(gia_ban, phi_bao_tri) {
+            const tableBody = document.getElementById('pttt_1_table');
+            tableBody.innerHTML = '';
+            
             const tien_dat_coc = 100000000;
-            const dot_1_ky_hdmb = gia_ban_cuoi_cung_gom_vat_sau_ck_chung * 0.1;
-            const dot_1_thuc_dong = Math.max(0, dot_1_ky_hdmb - tien_dat_coc);
             
-            // Build the payment table
-            let html = '';
+            // Đợt 1: Ký HĐMB - 10%
+            const dot_1 = gia_ban * 0.10;
+            const dot_1_thuc_dong = Math.max(0, dot_1 - tien_dat_coc);
+            addPaymentRow(tableBody, 'Đặt cọc', '', formatCurrency(tien_dat_coc), 'Trước khi ký HĐMB', 'T-30');
+            addPaymentRow(tableBody, 'Đợt 1 - Ký HĐMB', '10%', formatCurrency(dot_1_thuc_dong), 'Ký Hợp đồng mua bán', 'T');
             
-            // Đặt cọc
-            html += `
-                <tr>
-                    <td>Đặt cọc</td>
-                    <td>-</td>
-                    <td>${formatCurrency(tien_dat_coc)}</td>
-                    <td>Ký phiếu đặt cọc</td>
-                    <td>T</td>
-                </tr>
-            `;
+            // Đợt 2: 5%
+            const dot_2 = gia_ban * 0.05;
+            addPaymentRow(tableBody, 'Đợt 2', '5%', formatCurrency(dot_2), 'Trong vòng 30 ngày kể từ ngày ký HĐMB', 'T+30');
             
-            // Đợt 1
-            html += `
-                <tr>
-                    <td>Đợt 1</td>
-                    <td>10%</td>
-                    <td>${formatCurrency(dot_1_thuc_dong)}</td>
-                    <td>Ký HĐMB (đã bao gồm đặt cọc)</td>
-                    <td>T+30</td>
-                </tr>
-            `;
-            
-            // Đợt 2-25 (2.5% mỗi đợt)
-            let tong_thanh_toan = tien_dat_coc + dot_1_thuc_dong;
-            for (let i = 2; i <= 25; i++) {
-                const tien_dot_i = gia_ban_cuoi_cung_gom_vat_sau_ck_chung * 0.025;
-                tong_thanh_toan += tien_dot_i;
-                html += `
-                    <tr>
-                        <td>Đợt ${i}</td>
-                        <td>2.5%</td>
-                        <td>${formatCurrency(tien_dot_i)}</td>
-                        <td>Đóng vào ngày ${i*30-30} sau HĐMB</td>
-                        <td>T+${i*30}</td>
-                    </tr>
-                `;
+            // Đợt 3-16: 2% mỗi đợt (14 đợt)
+            for (let i = 3; i <= 16; i++) {
+                const amount = gia_ban * 0.02;
+                const days = 30 + (i - 2) * 30;
+                addPaymentRow(tableBody, `Đợt ${i}`, '2%', formatCurrency(amount), `Trong vòng 30 ngày kể từ ngày đến hạn thanh toán Đợt ${i-1}`, `T+${days}`);
             }
             
-            // Đợt bàn giao căn hộ (25%)
-            const dot_ban_giao = gia_ban_cuoi_cung_gom_vat_sau_ck_chung * 0.25;
-            tong_thanh_toan += dot_ban_giao;
-            html += `
-                <tr>
-                    <td>Đợt bàn giao căn hộ</td>
-                    <td>25%</td>
-                    <td>${formatCurrency(dot_ban_giao)}</td>
-                    <td>Khi nhận thông báo bàn giao căn hộ</td>
-                    <td>T+720</td>
-                </tr>
-            `;
+            // Đợt 17-24: 3% mỗi đợt (8 đợt)
+            for (let i = 17; i <= 24; i++) {
+                const amount = gia_ban * 0.03;
+                const days = 30 + (i - 2) * 30;
+                addPaymentRow(tableBody, `Đợt ${i}`, '3%', formatCurrency(amount), `Trong vòng 30 ngày kể từ ngày đến hạn thanh toán Đợt ${i-1}`, `T+${days}`);
+            }
             
-            // Đợt nhận GCN (5%)
-            const dot_nhan_gcn = gia_ban_cuoi_cung_gom_vat_sau_ck_chung * 0.05;
-            tong_thanh_toan += dot_nhan_gcn;
-            html += `
-                <tr>
-                    <td>Đợt nhận GCN</td>
-                    <td>5%</td>
-                    <td>${formatCurrency(dot_nhan_gcn)}</td>
-                    <td>Khi nhận thông báo GCN</td>
-                    <td>T+840</td>
-                </tr>
-            `;
+            // Đợt 25: Bàn giao - 25%
+            const dot_25 = gia_ban * 0.25;
+            addPaymentRow(tableBody, 'Đợt 25 - Bàn giao', '25%', formatCurrency(dot_25), 'Thông báo bàn giao căn hộ/căn thương mại dịch vụ', 'T+720');
+            
+            // Đợt 26: Nhận GCN - 5%
+            const dot_26 = gia_ban * 0.05;
+            addPaymentRow(tableBody, 'Đợt 26 - Nhận GCN', '5%', formatCurrency(dot_26), 'Thông báo nhận Giấy Chứng Nhận Quyền Sở Hữu', 'T+750');
             
             // Phí bảo trì
-            tong_thanh_toan += phi_bao_tri_amount;
-            html += `
-                <tr>
-                    <td>Phí bảo trì</td>
-                    <td>2%</td>
-                    <td>${formatCurrency(phi_bao_tri_amount)}</td>
-                    <td>Khi nhận bàn giao căn hộ</td>
-                    <td>T+720</td>
-                </tr>
-            `;
-            
-            // Tổng cộng
-            html += `
-                <tr class="font-bold bg-blue-100">
-                    <td>Tổng cộng</td>
-                    <td>100%</td>
-                    <td>${formatCurrency(tong_thanh_toan)}</td>
-                    <td colspan="2"></td>
-                </tr>
-            `;
-            
-            // Update the table
-            document.getElementById('pttt_chuan_table').innerHTML = html;
-            
-            // Save values for comparison
-            document.getElementById('coc_pttt_chuan').textContent = formatCurrency(tien_dat_coc);
-            document.getElementById('ky_hdmb_pttt_chuan').textContent = formatCurrency(dot_1_ky_hdmb);
-            
-            // Calculate total payment until receiving apartment
-            const tong_tien_nhan_nha_chuan = tien_dat_coc + dot_1_thuc_dong + (gia_ban_cuoi_cung_gom_vat_sau_ck_chung * 0.025 * 24) + dot_ban_giao + phi_bao_tri_amount;
-            document.getElementById('tong_tien_nhan_nha_pttt_chuan').textContent = formatCurrency(tong_tien_nhan_nha_chuan);
+            addPaymentRow(tableBody, 'Phí bảo trì', '2%', formatCurrency(phi_bao_tri), 'Khi nhận bàn giao', 'T+720');
         }
-        
-        // Calculate Fast Payment Method (Phương thức thanh toán nhanh)
-        function calculatePTTTNhanh() {
-            const tien_dat_coc = 100000000;
-            const dot_1_ky_hdmb = gia_ban_cuoi_cung_gom_vat_sau_ck_chung * 0.1;
-            const dot_1_thuc_dong = Math.max(0, dot_1_ky_hdmb - tien_dat_coc);
+
+        function calculatePTTT2(gia_ban, phi_bao_tri) {
+            const tableBody = document.getElementById('pttt_2_table');
+            tableBody.innerHTML = '';
             
-            const dot_2_thanh_toan_60_percent = gia_ban_cuoi_cung_gom_vat_sau_ck_chung * 0.6;
-            const chiet_khau_thanh_toan_nhanh_amount = dot_2_thanh_toan_60_percent * 0.08;
-            const dot_2_thuc_dong = dot_2_thanh_toan_60_percent - chiet_khau_thanh_toan_nhanh_amount;
-            
-            const dot_ban_giao = gia_ban_cuoi_cung_gom_vat_sau_ck_chung * 0.25;
-            const dot_nhan_gcn = gia_ban_cuoi_cung_gom_vat_sau_ck_chung * 0.05;
-            
-            // Build the payment table
-            let html = '';
-            
-            // Đặt cọc
-            html += `
-                <tr>
-                    <td>Đặt cọc</td>
-                    <td>-</td>
-                    <td>${formatCurrency(tien_dat_coc)}</td>
-                    <td>Ký phiếu đặt cọc</td>
-                    <td>T</td>
-                </tr>
-            `;
-            
-            // Đợt 1
-            html += `
-                <tr>
-                    <td>Đợt 1</td>
-                    <td>10%</td>
-                    <td>${formatCurrency(dot_1_thuc_dong)}</td>
-                    <td>Ký HĐMB (đã bao gồm đặt cọc)</td>
-                    <td>T+30</td>
-                </tr>
-            `;
-            
-            // Đợt 2
-            html += `
-                <tr>
-                    <td>Đợt 2</td>
-                    <td>60%</td>
-                    <td>${formatCurrency(dot_2_thuc_dong)}</td>
-                    <td>Trong vòng 15 ngày sau khi ký HĐMB (đã trừ CK 8%: ${formatCurrency(chiet_khau_thanh_toan_nhanh_amount)})</td>
-                    <td>T+45</td>
-                </tr>
-            `;
-            
-            // Đợt bàn giao căn hộ
-            html += `
-                <tr>
-                    <td>Đợt bàn giao căn hộ</td>
-                    <td>25%</td>
-                    <td>${formatCurrency(dot_ban_giao)}</td>
-                    <td>Khi nhận thông báo bàn giao căn hộ</td>
-                    <td>T+720</td>
-                </tr>
-            `;
-            
-            // Đợt nhận GCN
-            html += `
-                <tr>
-                    <td>Đợt nhận GCN</td>
-                    <td>5%</td>
-                    <td>${formatCurrency(dot_nhan_gcn)}</td>
-                    <td>Khi nhận thông báo GCN</td>
-                    <td>T+840</td>
-                </tr>
-            `;
-            
-            // Phí bảo trì
-            html += `
-                <tr>
-                    <td>Phí bảo trì</td>
-                    <td>2%</td>
-                    <td>${formatCurrency(phi_bao_tri_amount)}</td>
-                    <td>Khi nhận bàn giao căn hộ</td>
-                    <td>T+720</td>
-                </tr>
-            `;
-            
-            // Tổng cộng
-            const tong_thanh_toan = tien_dat_coc + dot_1_thuc_dong + dot_2_thuc_dong + dot_ban_giao + dot_nhan_gcn + phi_bao_tri_amount;
-            html += `
-                <tr class="font-bold bg-blue-100">
-                    <td>Tổng cộng</td>
-                    <td>100%</td>
-                    <td>${formatCurrency(tong_thanh_toan)}</td>
-                    <td colspan="2"></td>
-                </tr>
-            `;
-            
-            // Update the table
-            document.getElementById('pttt_nhanh_table').innerHTML = html;
-            document.getElementById('chiet_khau_thanh_toan_nhanh_amount').textContent = formatCurrency(chiet_khau_thanh_toan_nhanh_amount);
-            
-            // Save values for comparison
-            document.getElementById('coc_pttt_nhanh').textContent = formatCurrency(tien_dat_coc);
-            document.getElementById('ky_hdmb_pttt_nhanh').textContent = formatCurrency(dot_1_ky_hdmb);
-            
-            // Calculate total payment until receiving apartment
-            const tong_tien_nhan_nha_nhanh = tien_dat_coc + dot_1_thuc_dong + dot_2_thuc_dong + dot_ban_giao + phi_bao_tri_amount;
-            document.getElementById('tong_tien_nhan_nha_pttt_nhanh').textContent = formatCurrency(tong_tien_nhan_nha_nhanh);
-        }
-        
-        // Calculate Loan Support Method (Phương thức hỗ trợ vay ưu đãi)
-        function calculatePTTTVay() {
             const tien_dat_coc = 100000000;
             
-            // Đợt 1: VTC 8.6%
-            const dot_1_ky_hdmb_von_tu_co_percent = 8.6;
-            const dot_1_ky_hdmb_von_tu_co_amount = gia_ban_cuoi_cung_gom_vat_sau_ck_chung * (dot_1_ky_hdmb_von_tu_co_percent / 100);
-            const dot_1_thuc_dong = Math.max(0, dot_1_ky_hdmb_von_tu_co_amount - tien_dat_coc);
+            // Đợt 1: Ký HĐMB - 10%
+            const dot_1 = gia_ban * 0.10;
+            const dot_1_thuc_dong = Math.max(0, dot_1 - tien_dat_coc);
+            addPaymentRow(tableBody, 'Đặt cọc', '', formatCurrency(tien_dat_coc), 'Trước khi ký HĐMB', 'T-30');
+            addPaymentRow(tableBody, 'Đợt 1 - Ký HĐMB', '10%', formatCurrency(dot_1_thuc_dong), 'Ký Hợp đồng mua bán', 'T');
             
-            // Ngân hàng giải ngân đợt 1: 61.4%
-            const ngan_hang_giai_ngan_dot_1_percent = 61.4;
-            const ngan_hang_giai_ngan_dot_1_amount = gia_ban_cuoi_cung_gom_vat_sau_ck_chung * (ngan_hang_giai_ngan_dot_1_percent / 100);
+            // Đợt 2: Dỡ bỏ tổng vách hầm - 10%
+            const dot_2 = gia_ban * 0.10;
+            addPaymentRow(tableBody, 'Đợt 2', '10%', formatCurrency(dot_2), 'Khi công trình được dỡ bỏ tổng vách hầm', 'T+60');
             
-            // Bàn giao khách thanh toán: 20%
-            const ban_giao_khach_thanh_toan_percent = 20;
-            const ban_giao_khach_thanh_toan_amount = gia_ban_cuoi_cung_gom_vat_sau_ck_chung * (ban_giao_khach_thanh_toan_percent / 100);
+            // Đợt 3-9: Hoàn thành sàn tầng - 6% mỗi đợt
+            const tangData = [
+                {tang: 1, time: 'T+120'},
+                {tang: 5, time: 'T+180'},
+                {tang: 10, time: 'T+240'},
+                {tang: 15, time: 'T+360'},
+                {tang: 20, time: 'T+480'},
+                {tang: 25, time: 'T+600'},
+                {tang: 30, time: 'T+660'}
+            ];
             
-            // Bàn giao ngân hàng thanh toán: 5%
-            const ban_giao_ngan_hang_thanh_toan_percent = 5;
-            const ban_giao_ngan_hang_thanh_toan_amount = gia_ban_cuoi_cung_gom_vat_sau_ck_chung * (ban_giao_ngan_hang_thanh_toan_percent / 100);
+            tangData.forEach((data, index) => {
+                const dotNumber = index + 3;
+                const amount = gia_ban * 0.06;
+                addPaymentRow(tableBody, `Đợt ${dotNumber}`, '6%', formatCurrency(amount), `Khi công trình được dỡ bỏ tổng sàn tầng ${data.tang}`, data.time);
+            });
             
-            // Nhận GCN: 5%
-            const dot_nhan_gcn_percent = 5;
-            const dot_nhan_gcn_amount = gia_ban_cuoi_cung_gom_vat_sau_ck_chung * (dot_nhan_gcn_percent / 100);
+            // Đợt 10: Cất nóc - 8%
+            const dot_10 = gia_ban * 0.08;
+            addPaymentRow(tableBody, 'Đợt 10', '8%', formatCurrency(dot_10), 'Khi công trình được dỡ bỏ tổng tầng mái (cất nóc)', 'T+690');
             
-            // Tổng vốn tự có và vay
-            const tong_von_tu_co_khach_hang = dot_1_ky_hdmb_von_tu_co_amount + ban_giao_khach_thanh_toan_amount + dot_nhan_gcn_amount;
-            const tong_so_tien_vay_ngan_hang = ngan_hang_giai_ngan_dot_1_amount + ban_giao_ngan_hang_thanh_toan_amount;
+            // Đợt 11: Bàn giao - 25%
+            const dot_11 = gia_ban * 0.25;
+            addPaymentRow(tableBody, 'Đợt 11 - Bàn giao', '25%', formatCurrency(dot_11), 'Thông báo bàn giao căn hộ/căn thương mại dịch vụ', 'T+720');
             
-            // Thông tin vay
-            const lai_suat_vay_uu_dai_nam = parseFloat(document.getElementById('lai_suat_vay_uu_dai_nam').value) || 0;
-            const thoi_gian_vay_nam = parseFloat(document.getElementById('thoi_gian_vay_nam').value) || 30;
-            const thoi_gian_ho_tro_lai_suat_thang = parseFloat(document.getElementById('thoi_gian_ho_tro_lai_suat_thang').value) || 24;
-            const thoi_gian_an_han_goc_thang = parseFloat(document.getElementById('thoi_gian_an_han_goc_thang').value) || 60;
-            
-            // Tính lãi suất tháng
-            const lai_suat_thang = lai_suat_vay_uu_dai_nam / 12 / 100;
-            
-            // Tính số tiền trả mỗi tháng sau thời gian ân hạn
-            const thoi_gian_vay_con_lai = thoi_gian_vay_nam * 12 - thoi_gian_an_han_goc_thang;
-            const r = Math.pow(1 + lai_suat_thang, thoi_gian_vay_con_lai);
-            const goc_lai_hang_thang = tong_so_tien_vay_ngan_hang * lai_suat_thang * r / (r - 1);
-            
-            // Tính lãi hàng tháng trong thời gian ân hạn sau khi hết hỗ trợ lãi suất
-            const lai_hang_thang = tong_so_tien_vay_ngan_hang * lai_suat_thang;
-            
-            // Build the payment table
-            let html = '';
-            
-            // Đặt cọc
-            html += `
-                <tr>
-                    <td>Đặt cọc</td>
-                    <td>-</td>
-                    <td>${formatCurrency(tien_dat_coc)}</td>
-                    <td>Ký phiếu đặt cọc</td>
-                    <td>T</td>
-                </tr>
-            `;
-            
-            // Đợt 1 - VTC
-            html += `
-                <tr>
-                    <td>Đợt 1 (VTC)</td>
-                    <td>${dot_1_ky_hdmb_von_tu_co_percent}%</td>
-                    <td>${formatCurrency(dot_1_thuc_dong)}</td>
-                    <td>Ký HĐMB (đã bao gồm đặt cọc)</td>
-                    <td>T+30</td>
-                </tr>
-            `;
-            
-            // NH giải ngân đợt 1
-            html += `
-                <tr>
-                    <td>Ngân hàng giải ngân đợt 1</td>
-                    <td>${ngan_hang_giai_ngan_dot_1_percent}%</td>
-                    <td>${formatCurrency(ngan_hang_giai_ngan_dot_1_amount)}</td>
-                    <td>Theo thông báo của ngân hàng</td>
-                    <td>T+45</td>
-                </tr>
-            `;
-            
-            // Bàn giao KH thanh toán
-            html += `
-                <tr>
-                    <td>Khách hàng thanh toán khi bàn giao</td>
-                    <td>${ban_giao_khach_thanh_toan_percent}%</td>
-                    <td>${formatCurrency(ban_giao_khach_thanh_toan_amount)}</td>
-                    <td>Khi nhận thông báo bàn giao căn hộ</td>
-                    <td>T+720</td>
-                </tr>
-            `;
-            
-            // Bàn giao NH thanh toán
-            html += `
-                <tr>
-                    <td>Ngân hàng thanh toán khi bàn giao</td>
-                    <td>${ban_giao_ngan_hang_thanh_toan_percent}%</td>
-                    <td>${formatCurrency(ban_giao_ngan_hang_thanh_toan_amount)}</td>
-                    <td>Khi nhận thông báo bàn giao căn hộ</td>
-                    <td>T+720</td>
-                </tr>
-            `;
-            
-            // Nhận GCN
-            html += `
-                <tr>
-                    <td>Đợt nhận GCN</td>
-                    <td>${dot_nhan_gcn_percent}%</td>
-                    <td>${formatCurrency(dot_nhan_gcn_amount)}</td>
-                    <td>Khi nhận thông báo GCN</td>
-                    <td>T+840</td>
-                </tr>
-            `;
+            // Đợt 12: Nhận GCN - 5%
+            const dot_12 = gia_ban * 0.05;
+            addPaymentRow(tableBody, 'Đợt 12 - Nhận GCN', '5%', formatCurrency(dot_12), 'Thông báo nhận Giấy Chứng Nhận Quyền Sở Hữu', 'T+750');
             
             // Phí bảo trì
-            html += `
-                <tr>
-                    <td>Phí bảo trì</td>
-                    <td>2%</td>
-                    <td>${formatCurrency(phi_bao_tri_amount)}</td>
-                    <td>Khi nhận bàn giao căn hộ</td>
-                    <td>T+720</td>
-                </tr>
-            `;
+            addPaymentRow(tableBody, 'Phí bảo trì', '2%', formatCurrency(phi_bao_tri), 'Khi nhận bàn giao', 'T+720');
+        }
+
+        function calculatePTTTNhanh(gia_ban, phi_bao_tri) {
+            const tableBody = document.getElementById('pttt_nhanh_table');
+            tableBody.innerHTML = '';
             
-            // Tổng cộng
-            const tong_thanh_toan = tien_dat_coc + dot_1_thuc_dong + ngan_hang_giai_ngan_dot_1_amount + ban_giao_khach_thanh_toan_amount + ban_giao_ngan_hang_thanh_toan_amount + dot_nhan_gcn_amount + phi_bao_tri_amount;
-            html += `
-                <tr class="font-bold bg-blue-100">
-                    <td>Tổng cộng</td>
-                    <td>100%</td>
-                    <td>${formatCurrency(tong_thanh_toan)}</td>
-                    <td colspan="2"></td>
-                </tr>
-            `;
+            const tien_dat_coc = 100000000;
             
-            // Update the table
-            document.getElementById('pttt_vay_table').innerHTML = html;
+            // Đợt 1: Ký HĐMB - 10%
+            const dot_1 = gia_ban * 0.10;
+            const dot_1_thuc_dong = Math.max(0, dot_1 - tien_dat_coc);
+            addPaymentRow(tableBody, 'Đặt cọc', '', formatCurrency(tien_dat_coc), 'Trước khi ký HĐMB', 'T-30');
+            addPaymentRow(tableBody, 'Đợt 1 - Ký HĐMB', '10%', formatCurrency(dot_1_thuc_dong), 'Ký Hợp đồng mua bán', 'T');
             
-            // Thông tin trả góp
-            let infoHtml = '';
+            // Đợt 2: Thanh toán 60% - Có chiết khấu 8%
+            const dot_2_goc = gia_ban * 0.60;
+            const chiet_khau_8_percent = dot_2_goc * 0.08;
+            const dot_2_thuc_dong = dot_2_goc - chiet_khau_8_percent;
+            addPaymentRow(tableBody, 'Đợt 2 - Thanh toán nhanh', '60%', formatCurrency(dot_2_thuc_dong), 'Trong vòng 30 ngày kể từ ngày ký HĐMB (Được CK 8%)', 'T+30');
             
-            // Tổng vốn tự có và vay
-            infoHtml += `
-                <tr>
-                    <td>Tổng vốn tự có của khách hàng:</td>
-                    <td>${formatCurrency(tong_von_tu_co_khach_hang)}</td>
-                </tr>
-                <tr>
-                    <td>Tổng số tiền vay ngân hàng:</td>
-                    <td>${formatCurrency(tong_so_tien_vay_ngan_hang)}</td>
-                </tr>
-            `;
+            // Đợt 3: Bàn giao - 25%
+            const dot_3 = gia_ban * 0.25;
+            addPaymentRow(tableBody, 'Đợt 3 - Bàn giao', '25%', formatCurrency(dot_3), 'Thông báo bàn giao căn hộ', 'T+720');
             
-            // Trả lãi hàng tháng trong thời gian ân hạn (sau thời gian hỗ trợ lãi suất)
-            infoHtml += `
-                <tr>
-                    <td>Trả lãi hàng tháng trong thời gian ân hạn gốc (từ tháng ${thoi_gian_ho_tro_lai_suat_thang+1} đến tháng ${thoi_gian_an_han_goc_thang}):</td>
-                    <td>${formatCurrency(lai_hang_thang)}/tháng</td>
-                </tr>
-            `;
+            // Đợt 4: Nhận GCN - 5%
+            const dot_4 = gia_ban * 0.05;
+            addPaymentRow(tableBody, 'Đợt 4 - Nhận GCN', '5%', formatCurrency(dot_4), 'Thông báo nhận Giấy Chứng Nhận', 'T+750');
+            
+            // Phí bảo trì
+            addPaymentRow(tableBody, 'Phí bảo trì', '2%', formatCurrency(phi_bao_tri), 'Khi nhận bàn giao', 'T+720');
+            
+            // Cập nhật số tiền chiết khấu
+            document.getElementById('chiet_khau_thanh_toan_nhanh_amount').textContent = formatCurrency(chiet_khau_8_percent);
+        }
+
+        function calculatePTTTVay(gia_ban, phi_bao_tri) {
+            const tableBody = document.getElementById('pttt_vay_table');
+            tableBody.innerHTML = '';
+            
+            const tien_dat_coc = 100000000;
+            
+            // Đợt 1: Vốn tự có - 8.6%
+            const dot_1_vtc = gia_ban * 0.086;
+            const dot_1_thuc_dong = Math.max(0, dot_1_vtc - tien_dat_coc);
+            addPaymentRow(tableBody, 'Đặt cọc', '', formatCurrency(tien_dat_coc), 'Trước khi ký HĐMB', 'T-30');
+            addPaymentRow(tableBody, 'Đợt 1 - Vốn tự có', '8.6%', formatCurrency(dot_1_thuc_dong), 'Ký Hợp đồng mua bán', 'T');
+            
+            // Ngân hàng giải ngân - 61.4%
+            const ngan_hang_1 = gia_ban * 0.614;
+            addPaymentRow(tableBody, 'Ngân hàng giải ngân đợt 1', '61.4%', formatCurrency(ngan_hang_1), 'Khi ký HĐMB (Ngân hàng chi trả)', 'T');
+            
+            // Bàn giao - Khách thanh toán 16.4%
+            const ban_giao_khach = gia_ban * 0.164;
+            addPaymentRow(tableBody, 'Bàn giao - Khách thanh toán', '16.4%', formatCurrency(ban_giao_khach), 'Thông báo bàn giao căn hộ', 'T+720');
+            
+            // Bàn giao - Ngân hàng thanh toán 8.6%
+            const ban_giao_ngan_hang = gia_ban * 0.086;
+            addPaymentRow(tableBody, 'Bàn giao - Ngân hàng thanh toán', '8.6%', formatCurrency(ban_giao_ngan_hang), 'Thông báo bàn giao căn hộ (Ngân hàng chi trả)', 'T+720');
+            
+            // Nhận GCN - 5%
+            const nhan_gcn = gia_ban * 0.05;
+            addPaymentRow(tableBody, 'Nhận GCN', '5%', formatCurrency(nhan_gcn), 'Thông báo nhận Giấy Chứng Nhận', 'T+750');
+            
+            // Phí bảo trì
+            addPaymentRow(tableBody, 'Phí bảo trì', '2%', formatCurrency(phi_bao_tri), 'Khi nhận bàn giao', 'T+720');
+            
+            // Tính toán thông tin trả góp
+            calculateLoanInfo(ngan_hang_1 + ban_giao_ngan_hang);
+        }
+
+        function calculateLoanInfo(loan_amount) {
+            const lai_suat_uu_dai = parseFloat(document.getElementById('lai_suat_vay_uu_dai_nam').value) || 0;
+            const thoi_gian_vay = parseFloat(document.getElementById('thoi_gian_vay_nam').value) || 30;
+            const thoi_gian_ho_tro = parseFloat(document.getElementById('thoi_gian_ho_tro_lai_suat_thang').value) || 24;
+            const thoi_gian_an_han = parseFloat(document.getElementById('thoi_gian_an_han_goc_thang').value) || 60;
+            
+            const tableBody = document.getElementById('thong_tin_tra_gop');
+            tableBody.innerHTML = '';
+            
+            // Trong thời gian hỗ trợ lãi suất (24 tháng đầu)
+            const tra_lai_uu_dai = loan_amount * (lai_suat_uu_dai / 100 / 12);
+            addLoanInfoRow(tableBody, 'Trả lãi hàng tháng trong thời gian được hỗ trợ lãi suất (24 tháng đầu)', formatCurrency(tra_lai_uu_dai));
+            
+            // Trả lãi trong thời gian ân hạn gốc (từ tháng 25 đến tháng 60)
+            const lai_suat_tha_noi = 12; // Giả định lãi suất thả nổi
+            const tra_lai_an_han = loan_amount * (lai_suat_tha_noi / 100 / 12);
+            addLoanInfoRow(tableBody, 'Trả lãi hàng tháng trong thời gian ân hạn gốc (từ tháng 25 đến tháng 60)', formatCurrency(tra_lai_an_han));
             
             // Trả gốc + lãi sau thời gian ân hạn
-            infoHtml += `
-                <tr>
-                    <td>Trả gốc + lãi hàng tháng sau thời gian ân hạn (từ tháng ${thoi_gian_an_han_goc_thang+1} đến tháng ${thoi_gian_vay_nam*12}):</td>
-                    <td>${formatCurrency(goc_lai_hang_thang)}/tháng</td>
-                </tr>
-            `;
+            const thang_con_lai = (thoi_gian_vay * 12) - thoi_gian_an_han;
+            const monthly_payment = calculatePMT(lai_suat_tha_noi / 100 / 12, thang_con_lai, loan_amount);
+            addLoanInfoRow(tableBody, `Trả gốc + lãi hàng tháng sau thời gian ân hạn (từ tháng 61 đến tháng ${thoi_gian_vay * 12})`, formatCurrency(monthly_payment));
             
             // Tổng số tiền phải trả trong thời gian được hỗ trợ lãi suất
-            const tong_tien_ho_tro_lai = dot_1_thuc_dong + tien_dat_coc + ban_giao_khach_thanh_toan_amount + phi_bao_tri_amount + dot_nhan_gcn_amount;
-            infoHtml += `
-                <tr>
-                    <td>Tổng số tiền phải trả trong thời gian được hỗ trợ lãi suất (24 tháng đầu):</td>
-                    <td>${formatCurrency(tong_tien_ho_tro_lai)}</td>
-                </tr>
-            `;
-            
-            // Update thông tin trả góp
-            document.getElementById('thong_tin_tra_gop').innerHTML = infoHtml;
-            
-            // Save values for comparison
-            document.getElementById('coc_pttt_vay').textContent = formatCurrency(tien_dat_coc);
-            document.getElementById('ky_hdmb_pttt_vay').textContent = formatCurrency(dot_1_ky_hdmb_von_tu_co_amount);
-            
-            // Calculate total payment until receiving apartment (T+720)
-            const tong_tien_nhan_nha_vay = tien_dat_coc + dot_1_thuc_dong + ban_giao_khach_thanh_toan_amount + phi_bao_tri_amount;
-            document.getElementById('tong_tien_nhan_nha_pttt_vay').textContent = formatCurrency(tong_tien_nhan_nha_vay);
+            const tong_ho_tro_lai_suat = tra_lai_uu_dai * thoi_gian_ho_tro;
+            addLoanInfoRow(tableBody, 'Tổng số tiền phải trả trong thời gian được hỗ trợ lãi suất (24 tháng)', formatCurrency(tong_ho_tro_lai_suat));
         }
-        
-        // Compare and recommend payment methods
-        function compareAndRecommend() {
-            // Get customer financial information
+
+        function calculatePMT(rate, nper, pv) {
+            if (rate === 0) return pv / nper;
+            return pv * rate * Math.pow(1 + rate, nper) / (Math.pow(1 + rate, nper) - 1);
+        }
+
+        function addPaymentRow(tableBody, dot, ty_le, so_tien, tien_do, thoi_gian) {
+            const row = tableBody.insertRow();
+            row.insertCell(0).textContent = dot;
+            row.insertCell(1).textContent = ty_le;
+            row.insertCell(2).textContent = so_tien;
+            row.insertCell(3).textContent = tien_do;
+            row.insertCell(4).textContent = thoi_gian;
+        }
+
+        function addLoanInfoRow(tableBody, label, value) {
+            const row = tableBody.insertRow();
+            row.insertCell(0).textContent = label;
+            row.insertCell(1).textContent = value;
+        }
+
+        function updateComparisonTable() {
+            const gia_ban = currentCalculationData.gia_ban_cuoi_cung;
+            
+            // Tính toán tổng tiền cần để ký HĐMB
+            const tien_coc = 100000000;
+            const dot_1_percent = 0.10;
+            const ky_hdmb_amount = gia_ban * dot_1_percent;
+            
+            // PTTT 1
+            document.getElementById('ky_hdmb_pttt_1').textContent = formatCurrency(ky_hdmb_amount);
+            
+            // PTTT 2
+            document.getElementById('ky_hdmb_pttt_2').textContent = formatCurrency(ky_hdmb_amount);
+            
+            // PTTT 3
+            document.getElementById('ky_hdmb_pttt_nhanh').textContent = formatCurrency(ky_hdmb_amount);
+            
+            // PTTT 4
+            document.getElementById('ky_hdmb_pttt_vay').textContent = formatCurrency(gia_ban * 0.086);
+            
+            // Tính tổng tiền đến thời điểm nhận nhà (T+720)
+            const pttt1_den_nhan_nha = gia_ban * 0.70; // 70% đến bàn giao
+            const pttt2_den_nhan_nha = gia_ban * 0.75; // 75% đến bàn giao
+            const pttt3_den_nhan_nha = gia_ban * 0.95 - (gia_ban * 0.60 * 0.08); // 95% - chiết khấu 8%
+            const pttt4_den_nhan_nha = gia_ban * (0.086 + 0.164); // VTC + khách thanh toán
+            
+            document.getElementById('tong_tien_nhan_nha_pttt_1').textContent = formatCurrency(pttt1_den_nhan_nha);
+            document.getElementById('tong_tien_nhan_nha_pttt_2').textContent = formatCurrency(pttt2_den_nhan_nha);
+            document.getElementById('tong_tien_nhan_nha_pttt_nhanh').textContent = formatCurrency(pttt3_den_nhan_nha);
+            document.getElementById('tong_tien_nhan_nha_pttt_vay').textContent = formatCurrency(pttt4_den_nhan_nha);
+        }
+
+        function updateRecommendation() {
             const von_tu_co = parseFloat(document.getElementById('von_tu_co').value) || 0;
-            const thu_nhap_hang_thang = parseFloat(document.getElementById('thu_nhap_hang_thang').value) || 0;
+            const thu_nhap = parseFloat(document.getElementById('thu_nhap_hang_thang').value) || 0;
+            const gia_ban = currentCalculationData.gia_ban_cuoi_cung;
             
-            // PTTT Chuẩn data
-            const dot_1_ky_hdmb_chuan = gia_ban_cuoi_cung_gom_vat_sau_ck_chung * 0.1;
-            const tien_dot_thang_chuan = gia_ban_cuoi_cung_gom_vat_sau_ck_chung * 0.025;
-            
-            // PTTT Nhanh data
-            const dot_1_ky_hdmb_nhanh = gia_ban_cuoi_cung_gom_vat_sau_ck_chung * 0.1;
-            const dot_2_nhanh = gia_ban_cuoi_cung_gom_vat_sau_ck_chung * 0.6 * 0.92; // Sau CK 8%
-            
-            // PTTT Vay data
-            const dot_1_ky_hdmb_vay = gia_ban_cuoi_cung_gom_vat_sau_ck_chung * 0.086;
-            const tien_lai_hang_thang = gia_ban_cuoi_cung_gom_vat_sau_ck_chung * 0.664 * (parseFloat(document.getElementById('lai_suat_vay_uu_dai_nam').value) || 0) / 12 / 100;
-            
-            // Update chiết khấu display
-            const voucher_chiet_khau_value = parseFloat(document.querySelector('input[name="voucher_chiet_khau"]:checked').value) || 0;
-            if (voucher_chiet_khau_value > 0) {
-                document.getElementById('chiet_khau_pttt_chuan').textContent = `Chiết khấu chung + Voucher ${voucher_chiet_khau_value}%`;
-                document.getElementById('chiet_khau_pttt_nhanh').textContent = `Chiết khấu chung + 8% (cho 60% GTCH) + Voucher ${voucher_chiet_khau_value}%`;
-                document.getElementById('chiet_khau_pttt_vay').textContent = `Chiết khấu chung + Voucher ${voucher_chiet_khau_value}%`;
-            }
-            
-            // Generate recommendation
             let recommendation = '';
             
-            // If customer has enough money for PTTT Nhanh
-            if (von_tu_co >= dot_1_ky_hdmb_nhanh + dot_2_nhanh) {
-                recommendation = `
-                    <p><strong class="text-blue-600">Khuyến nghị:</strong> Với khả năng tài chính của bạn (vốn tự có ${formatCurrency(von_tu_co)}), 
-                    bạn nên lựa chọn <strong>PTTT Nhanh</strong> để tận dụng chiết khấu 8% cho 60% giá trị căn hộ. 
-                    Điều này sẽ giúp bạn tiết kiệm tổng chi phí nhiều nhất.</p>
-                    <p>Tổng số tiền tiết kiệm được với PTTT Nhanh so với PTTT Chuẩn: ${formatCurrency(gia_ban_cuoi_cung_gom_vat_sau_ck_chung * 0.6 * 0.08)}</p>
-                `;
-            }
-            // If customer doesn't have enough for PTTT Nhanh but has enough for PTTT Chuẩn's first payments
-            else if (von_tu_co >= dot_1_ky_hdmb_chuan && thu_nhap_hang_thang >= tien_dot_thang_chuan * 2) {
-                recommendation = `
-                    <p><strong class="text-blue-600">Khuyến nghị:</strong> Với khả năng tài chính của bạn (vốn tự có ${formatCurrency(von_tu_co)} 
-                    và thu nhập hàng tháng ${formatCurrency(thu_nhap_hang_thang)}), <strong>PTTT Chuẩn</strong> là lựa chọn phù hợp. 
-                    Bạn có đủ khả năng thanh toán đợt đầu và các khoản 2.5% hàng tháng một cách thoải mái.</p>
-                `;
-            }
-            // Customer has very limited funds - recommend PTTT Vay
-            else {
-                recommendation = `
-                    <p><strong class="text-blue-600">Khuyến nghị:</strong> Với vốn tự có hạn chế (${formatCurrency(von_tu_co)}), 
-                    <strong>PTTT Hỗ trợ vay ưu đãi</strong> là lựa chọn phù hợp nhất. Bạn chỉ cần thanh toán 8.6% giá trị căn hộ ban đầu 
-                    và được hỗ trợ lãi suất trong 24 tháng đầu.</p>
-                    <p>Tuy nhiên, cần lưu ý rằng sau thời gian hỗ trợ lãi suất, bạn sẽ cần thanh toán khoản lãi khoảng 
-                    ${formatCurrency(tien_lai_hang_thang)}/tháng.</p>
-                `;
+            if (von_tu_co >= gia_ban * 0.70) {
+                recommendation = 'Với vốn tự có hiện tại, bạn có thể lựa chọn PTTT 3 (Thanh toán nhanh) để được chiết khấu 8% cho khoản thanh toán 60%, giúp tiết kiệm chi phí đáng kể.';
+            } else if (von_tu_co >= gia_ban * 0.25 && thu_nhap * 12 >= gia_ban * 0.30) {
+                recommendation = 'Với khả năng tài chính hiện tại, PTTT 1 (Theo thời gian) hoặc PTTT 2 (Theo tiến độ) sẽ phù hợp, giúp bạn phân bổ thanh toán đều đặn theo thời gian.';
+            } else if (von_tu_co >= gia_ban * 0.086) {
+                recommendation = 'PTTT 4 (Hỗ trợ vay ưu đãi) sẽ phù hợp với bạn, chỉ cần 8.6% vốn tự có đến khi bàn giao và được hỗ trợ lãi suất trong 24 tháng đầu.';
+            } else {
+                recommendation = 'Bạn nên cân nhắc tăng vốn tự có hoặc tìm hiểu thêm về các chương trình hỗ trợ tài chính để có thể lựa chọn phương thức thanh toán phù hợp.';
             }
             
-            // If monthly income is not enough for loan payment
-            if (thu_nhap_hang_thang < tien_lai_hang_thang * 3 && von_tu_co < dot_1_ky_hdmb_nhanh + dot_2_nhanh) {
-                recommendation += `
-                    <p class="text-red-600 font-bold mt-2">Lưu ý: Thu nhập hàng tháng của bạn có thể không đủ để thanh toán khoản vay 
-                    trong dài hạn (thường ngân hàng yêu cầu thu nhập gấp 3 lần khoản trả hàng tháng). 
-                    Vui lòng xem xét kỹ khả năng tài chính hoặc cân nhắc các căn hộ có giá trị phù hợp hơn.</p>
-                `;
-            }
-            
-            // Update the recommendation
-            document.getElementById('recommendation_text').innerHTML = recommendation;
+            document.getElementById('recommendation_text').textContent = recommendation;
         }
-        
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            // Enable calculate button even if no apartment is selected
-            document.getElementById('calculate_btn').addEventListener('click', calculateAll);
-        });
+
+        function updateCashFlowChart() {
+            const ctx = document.getElementById('cashFlowChart').getContext('2d');
+            
+            if (cashFlowChart) {
+                cashFlowChart.destroy();
+            }
+            
+            const gia_ban = currentCalculationData.gia_ban_cuoi_cung;
+            const datasets = [];
+            
+            // PTTT 1: Theo thời gian
+            const pttt1Data = calculateCumulativePayments1(gia_ban);
+            datasets.push({
+                label: 'PTTT 1: Theo thời gian',
+                data: pttt1Data,
+                borderColor: 'rgb(34, 197, 94)',
+                backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                tension: 0.1
+            });
+            
+            // PTTT 2: Theo tiến độ
+            const pttt2Data = calculateCumulativePayments2(gia_ban);
+            datasets.push({
+                label: 'PTTT 2: Theo tiến độ',
+                data: pttt2Data,
+                borderColor: 'rgb(249, 115, 22)',
+                backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                tension: 0.1
+            });
+            
+            // PTTT 3: Nhanh
+            const pttt3Data = calculateCumulativePayments3(gia_ban);
+            datasets.push({
+                label: 'PTTT 3: Nhanh',
+                data: pttt3Data,
+                borderColor: 'rgb(239, 68, 68)',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                tension: 0.1
+            });
+            
+            // PTTT 4: Hỗ trợ vay
+            const pttt4Data = calculateCumulativePayments4(gia_ban);
+            datasets.push({
+                label: 'PTTT 4: Hỗ trợ vay',
+                data: pttt4Data,
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.1
+            });
+            
+            cashFlowChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            title: {
+                                display: true,
+                                text: 'Thời gian (ngày)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Số tiền lũy tiến (VNĐ)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrencyShort(value);
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function calculateCumulativePayments1(gia_ban) {
+            const data = [];
+            const tien_coc = 100000000;
+            let cumulative = 0;
+            
+            // Đặt cọc T-30
+            data.push({x: -30, y: cumulative});
+            cumulative += tien_coc;
+            data.push({x: -30, y: cumulative});
+            
+            // Đợt 1: T
+            cumulative += Math.max(0, gia_ban * 0.10 - tien_coc);
+            data.push({x: 0, y: cumulative});
+            
+            // Đợt 2: T+30
+            cumulative += gia_ban * 0.05;
+            data.push({x: 30, y: cumulative});
+            
+            // Đợt 3-16: 2% mỗi đợt
+            for (let i = 3; i <= 16; i++) {
+                const days = 30 + (i - 2) * 30;
+                cumulative += gia_ban * 0.02;
+                data.push({x: days, y: cumulative});
+            }
+            
+            // Đợt 17-24: 3% mỗi đợt
+            for (let i = 17; i <= 24; i++) {
+                const days = 30 + (i - 2) * 30;
+                cumulative += gia_ban * 0.03;
+                data.push({x: days, y: cumulative});
+            }
+            
+            // Đợt 25: T+720 (Bàn giao)
+            cumulative += gia_ban * 0.25;
+            cumulative += currentCalculationData.phi_bao_tri_amount; // Phí bảo trì
+            data.push({x: 720, y: cumulative});
+            
+            // Đợt 26: T+750 (GCN)
+            cumulative += gia_ban * 0.05;
+            data.push({x: 750, y: cumulative});
+            
+            return data;
+        }
+
+        function calculateCumulativePayments2(gia_ban) {
+            const data = [];
+            const tien_coc = 100000000;
+            let cumulative = 0;
+            
+            // Đặt cọc T-30
+            data.push({x: -30, y: cumulative});
+            cumulative += tien_coc;
+            data.push({x: -30, y: cumulative});
+            
+            // Đợt 1: T
+            cumulative += Math.max(0, gia_ban * 0.10 - tien_coc);
+            data.push({x: 0, y: cumulative});
+            
+            // Đợt 2: T+60
+            cumulative += gia_ban * 0.10;
+            data.push({x: 60, y: cumulative});
+            
+            // Đợt 3-9: 6% mỗi đợt theo tiến độ
+            const schedule = [120, 180, 240, 360, 480, 600, 660];
+            schedule.forEach(days => {
+                cumulative += gia_ban * 0.06;
+                data.push({x: days, y: cumulative});
+            });
+            
+            // Đợt 10: T+690 (Cất nóc)
+            cumulative += gia_ban * 0.08;
+            data.push({x: 690, y: cumulative});
+            
+            // Đợt 11: T+720 (Bàn giao)
+            cumulative += gia_ban * 0.25;
+            cumulative += currentCalculationData.phi_bao_tri_amount; // Phí bảo trì
+            data.push({x: 720, y: cumulative});
+            
+            // Đợt 12: T+750 (GCN)
+            cumulative += gia_ban * 0.05;
+            data.push({x: 750, y: cumulative});
+            
+            return data;
+        }
+
+        function calculateCumulativePayments3(gia_ban) {
+            const data = [];
+            const tien_coc = 100000000;
+            let cumulative = 0;
+            
+            // Đặt cọc T-30
+            data.push({x: -30, y: cumulative});
+            cumulative += tien_coc;
+            data.push({x: -30, y: cumulative});
+            
+            // Đợt 1: T
+            cumulative += Math.max(0, gia_ban * 0.10 - tien_coc);
+            data.push({x: 0, y: cumulative});
+            
+            // Đợt 2: T+30 (60% - 8% chiết khấu)
+            const dot_2_goc = gia_ban * 0.60;
+            const chiet_khau = dot_2_goc * 0.08;
+            cumulative += (dot_2_goc - chiet_khau);
+            data.push({x: 30, y: cumulative});
+            
+            // Đợt 3: T+720 (Bàn giao)
+            cumulative += gia_ban * 0.25;
+            cumulative += currentCalculationData.phi_bao_tri_amount; // Phí bảo trì
+            data.push({x: 720, y: cumulative});
+            
+            // Đợt 4: T+750 (GCN)
+            cumulative += gia_ban * 0.05;
+            data.push({x: 750, y: cumulative});
+            
+            return data;
+        }
+
+        function calculateCumulativePayments4(gia_ban) {
+            const data = [];
+            const tien_coc = 100000000;
+            let cumulative = 0;
+            
+            // Đặt cọc T-30
+            data.push({x: -30, y: cumulative});
+            cumulative += tien_coc;
+            data.push({x: -30, y: cumulative});
+            
+            // Đợt 1: T (VTC 8.6%)
+            cumulative += Math.max(0, gia_ban * 0.086 - tien_coc);
+            data.push({x: 0, y: cumulative});
+            
+            // T+720 (Bàn giao - Khách 16.4%)
+            cumulative += gia_ban * 0.164;
+            cumulative += currentCalculationData.phi_bao_tri_amount; // Phí bảo trì
+            data.push({x: 720, y: cumulative});
+            
+            // T+750 (GCN)
+            cumulative += gia_ban * 0.05;
+            data.push({x: 750, y: cumulative});
+            
+            return data;
+        }
+
+        function openTab(tabName) {
+            // Ẩn tất cả tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Bỏ active từ tất cả buttons
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            // Hiển thị tab được chọn
+            document.getElementById(tabName).classList.add('active');
+            
+            // Đánh dấu button được chọn
+            event.target.classList.add('active');
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            }).format(amount);
+        }
+
+        function formatCurrencyShort(amount) {
+            if (amount >= 1000000000) {
+                return (amount / 1000000000).toFixed(1) + ' tỷ';
+            } else if (amount >= 1000000) {
+                return (amount / 1000000).toFixed(1) + ' tr';
+            }
+            return formatCurrency(amount);
+        }
     </script>
 </body>
 </html>
